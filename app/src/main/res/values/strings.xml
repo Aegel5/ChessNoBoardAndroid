@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ChessNoBoardAndroid</string>
+    <string-array name="boardModesList">
+        <item>Hardcore</item>
+        <item>Allow View figures</item>
+        <item>Always View figures</item>
+        <item>Allow view text board</item>
+        <item>Allow view graphics board</item>
+        <item>Classic game</item>
+    </string-array>
+</resources>
