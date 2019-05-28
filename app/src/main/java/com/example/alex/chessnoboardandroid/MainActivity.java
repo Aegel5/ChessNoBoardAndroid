@@ -26,23 +26,15 @@ import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
-import com.github.bhlangonijr.chesslib.move.MoveGenerator;
-import com.github.bhlangonijr.chesslib.move.MoveGeneratorException;
-import com.github.bhlangonijr.chesslib.move.MoveList;
 import com.google.gson.Gson;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainApp.MainTag + UCIWrapper.class.getSimpleName();
+    private static final String TAG = MainApp.MainTag + MainActivity.class.getSimpleName();
 
     private static final int PICK_NEW_GAME_REQUEST = 0;
     private static final String APP_PREFERENCES = "mysettings";
@@ -53,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private Button[] buttonsLetters = null;
     private ToggleButton btnIsCompEnabled = null;
     private BoardViewListener boardViewListener;
-    private Button btnBoard;
+    private Button btnShowBoard;
     private PopupWindow popupWindowBoard;
     private TextView boardView;
     private final Handler handler = new Handler();
@@ -67,46 +59,12 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private List<DisplayMoveItem> lstMoveItemsDisplay = new ArrayList<>();
 
+
+
     /*
-    Данные игры которые сериализуются при паузе
+    Коллбек для показа доски
      */
-    class GameData {
-        NewGameParams parm;
-        String curMove = "";
-        Map<String, Integer> scoreCache = new TreeMap<>();
-        GameState lastGameState;
-        transient Board board = null;
-        boolean compEnabled = false;
-        String[] moves;
-
-        String Serialize() {
-
-            if (!board.getBackup().isEmpty()) {
-                int index = 0;
-                moves = new String[board.getBackup().size()];
-                for (MoveBackup mb : board.getBackup()) {
-                    moves[index++] = mb.getMove().toString();
-                }
-            }
-
-            return (new Gson()).toJson(this);
-        }
-
-    }
-
-    GameData Deserialize(String str) {
-        GameData data = (new Gson()).fromJson(str, GameData.class);
-        data.board = new Board();
-        if (data.moves != null) {
-
-            for (String mv : data.moves) {
-                data.board.doMove(new Move(mv, data.board.getSideToMove()), false);
-            }
-        }
-        return data;
-    }
-
-    class BoardViewListener implements View.OnTouchListener {
+    private class BoardViewListener implements View.OnTouchListener {
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -130,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void fillButtonsLetter() {
+    private void fillButtonsLetter() {
         buttonsLetters = new Button[8];
         buttonsLetters[0] = findViewById(R.id.l1);
         buttonsLetters[1] = findViewById(R.id.l2);
@@ -142,7 +100,8 @@ public class MainActivity extends AppCompatActivity {
         buttonsLetters[7] = findViewById(R.id.l8);
     }
 
-    void initPopup() {
+    private void initPopup() {
+
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.layout_board, null);
 
@@ -184,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             boardView.setText(result.toString());
-            popupWindowBoard.showAtLocation(btnBoard, Gravity.CENTER, 0, 0);
+            popupWindowBoard.showAtLocation(btnShowBoard, Gravity.CENTER, 0, 0);
 
         } catch (Exception e) {
             Log.d(TAG, "Exception showBoardPopup: " + e.toString());
@@ -195,42 +154,6 @@ public class MainActivity extends AppCompatActivity {
         st.board.doMove(new Move(move, st.board.getSideToMove()));
     }
 
-    void testProm() {
-        try {
-            doMove("e2e4");
-            doMove("a7a6");
-            doMove("f1a6");
-            doMove("a8a6");
-            doMove("a2a4");
-            doMove("a6b6");
-            doMove("a4a5");
-            doMove("b6c6");
-            doMove("a5a6");
-            doMove("c6d6");
-            doMove("a6a7");
-            doMove("d6e6");
-            updateGui();
-        } catch (Exception e) {
-            Log.d(TAG, "Exception testProm: " + e.toString());
-        }
-    }
-
-    void testMate() {
-        try {
-            st.board = new Board();
-            doMove("e2e4");
-            doMove("a7a6");
-            doMove("f1c4");
-            doMove("a6a5");
-            doMove("d1h5");
-            doMove("a5a4");
-            //doMove("h5f7");
-
-            updateGui();
-        } catch (Exception e) {
-            Log.d(TAG, "Exception testProm: " + e.toString());
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -251,9 +174,6 @@ public class MainActivity extends AppCompatActivity {
             if (st == null) {
                 st = startNewGame(new NewGameParams());
             }
-
-            //testProm();
-            //testMate();
 
         } catch (Exception e) {
             Log.d(TAG, Utils.printException(e));
@@ -295,8 +215,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         Log.d(TAG, "onResume");
         super.onResume();
-
-
         activityStarted = true;
     }
 
@@ -309,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         try {
-            st = Deserialize(stateString);
+            st = GameData.Deserialize(stateString);
             updateCompOnButtonText();
             updateGui();
         } catch (Exception e) {
@@ -344,9 +262,9 @@ public class MainActivity extends AppCompatActivity {
                 updateGui();
             }
         });
-        btnBoard = findViewById(R.id.btnBoard);
+        btnShowBoard = findViewById(R.id.btnBoard);
         boardViewListener = new BoardViewListener();
-        btnBoard.setOnTouchListener(boardViewListener);
+        btnShowBoard.setOnTouchListener(boardViewListener);
 
         (findViewById(R.id.btnBS)).setOnLongClickListener(v -> {
             revertMove();
@@ -354,12 +272,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        mRecyclerView = findViewById(R.id.my_recycler_view);
         //mRecyclerView.setHasFixedSize(true);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mAdapter = new DataAdapterMoves(this);
         mRecyclerView.setAdapter(mAdapter);
+    }
+
+    GameState getGameState()
+    {
+        return ChessLibWrapper.getGameState(st.board);
     }
 
     void revertMove() {
@@ -506,135 +429,36 @@ public class MainActivity extends AppCompatActivity {
         }
 
         void checkCompDoMove() {
+
             Log.d(TAG, "thread is " + Thread.currentThread().getId());
-            List<String> lines = uci.curLines();
-            String result = null;
-            if (!lines.isEmpty()) {
-                for (; lastCheckedIndex < lines.size(); lastCheckedIndex++) {
-                    String line = lines.get(lastCheckedIndex);
-                    if (line.startsWith("bestmove")) {
-                        result = line;
-                        break;
+
+            try {
+
+
+                List<String> lines = uci.curLines();
+                String bestMoveLine = null;
+                if (!lines.isEmpty()) {
+                    for (; lastCheckedIndex < lines.size(); lastCheckedIndex++) {
+                        String line = lines.get(lastCheckedIndex);
+                        if (line.startsWith("bestmove")) {
+                            bestMoveLine = line;
+                            break;
+                        }
                     }
                 }
-            }
-            if (result != null) {
-                compMoveWaiter = null;
-                actualCompDoMove(result);
-                printAllMoves();
-            } else {
-                scheduleWait(10);
-            }
+                if (bestMoveLine != null) {
+                    compMoveWaiter = null;
 
+                    doIntMove(CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci));
+                    printAllMoves();
+                } else {
+                    scheduleWait(10);
+                }
+            } catch (Exception e) {
+                Log.d(TAG, Utils.printException(e));
+            }
         }
     }
-
-
-    void actualCompDoMove(String lineBestMove) {
-        try {
-
-            Pattern pattern = Pattern.compile("bestmove (\\w*)");
-            Matcher match = pattern.matcher(lineBestMove);
-            if (!match.find())
-                new RuntimeException("not found move for: " + lineBestMove);
-
-            String bestMoveString = match.group(1).trim();
-            Log.d(TAG, "comp move: " + bestMoveString);
-            if (bestMoveString.length() < 4)
-                throw new RuntimeException("bad move string: " + bestMoveString);
-
-            Move bestmove = moveFromString(bestMoveString);
-
-//            if (isMoveLegal(bestmove, false) != MoveLegalResult.AllOk)
-//                throw new RuntimeException("illegal comp move: " + bestMoveString);
-
-            Move moveTodo = bestmove;
-            int moveScoreTodo = Integer.MIN_VALUE;
-
-            if (!st.parm.isMaxStrength()) {
-                //boolean isWhite = board.getSideToMove() == Side.WHITE;
-                // получим все ходы компа.
-                List<UciMove> possibleMoves = new ArrayList<>();
-                Map<String, UciMove> allMoves = uci.getCurrentMovesScore();
-                if (allMoves.isEmpty())
-                    throw new RuntimeException("moves is empty, buy best move exists");
-                int minDeltaScore = StrengthRules.getMinDeltaScoreForLevel(st.parm.getCompStrength());
-                int bestScore = allMoves.get(bestMoveString).getUniversalScore();
-
-                int minPossibleScore = bestScore - minDeltaScore;
-
-                int previusScore = Integer.MAX_VALUE;
-                LinkedList<MoveBackup> backup = st.board.getBackup();
-                if (!backup.isEmpty()) {
-                    Move mv = backup.getLast().getMove();
-                    st.board.undoMove();
-                    String fen = st.board.getFen();
-                    st.board.doMove(mv);
-                    //Log.d(TAG,"try find for fen "+ fen);
-                    previusScore = st.scoreCache.getOrDefault(fen, previusScore);
-                    if (previusScore != Integer.MAX_VALUE) {
-                        Log.d(TAG, "found previous score " + previusScore);
-                    }
-
-
-                }
-
-                int origMinPossibleScore = minPossibleScore;
-                if (minPossibleScore > previusScore) {
-                    // Пользователь зевнул, на низких уровнях не будем принимать его зевок
-                    double total = minPossibleScore - previusScore;
-                    double step = total / NewGameParams.getMaxLevel();
-                    double addFor = step * st.parm.getCompStrength();
-                    minPossibleScore = previusScore + (int) Math.round(addFor);
-                    Log.d(TAG, String.format("уменьшаем minPossibleScore %d -> %d ", origMinPossibleScore, minPossibleScore));
-
-                }
-
-                Log.d(TAG, String.format("best score=%d, minpossiblescore=%d(%d), prevScore=%d",
-                        bestScore, minPossibleScore, origMinPossibleScore, previusScore));
-                for (UciMove move : allMoves.values()) {
-                    if (move.getUniversalScore() >= minPossibleScore)
-                        possibleMoves.add(move);
-                }
-                if (possibleMoves.isEmpty())
-                    throw new RuntimeException("possible moves empty");
-
-                UciMove moveUci = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1));
-                moveTodo = moveFromString(moveUci.getMove());
-
-//                if (isMoveLegal(moveTodo, false) != MoveLegalResult.AllOk) {
-//                    throw new RuntimeException("comp move not legal " + moveUci.move);
-//                }
-
-                StringBuilder allmv = new StringBuilder();
-                for (int i = 0; i < possibleMoves.size(); i++) {
-                    allmv.append(possibleMoves.get(i).getMove());
-                    if (i != possibleMoves.size() - 1)
-                        allmv.append(",");
-                }
-                moveScoreTodo = moveUci.getUniversalScore();
-                Log.d(TAG, String.format("side=%s, choose move=%s(%d) from %d(%s)(all=%d), bestmove=%s(%d), level=%d",
-                        st.board.getSideToMove().toString(),
-                        moveUci.getMove(), moveUci.getUniversalScore(),
-                        possibleMoves.size(), allmv.toString(), allMoves.size(),
-                        bestMoveString, bestScore, st.parm.getCompStrength()));
-
-            }
-
-            doIntMove(moveTodo);
-
-            // запомним best score для этой позиции
-            if (moveScoreTodo != Integer.MIN_VALUE) {
-                st.scoreCache.put(st.board.getFen(), moveScoreTodo);
-                //Log.d(TAG, "safe score for fen " + board.getFen());
-            }
-
-        } catch (Exception e) {
-            Log.d(TAG, Utils.printException(e));
-        } finally {
-        }
-    }
-
 
     void doCompMove() {
         try {
@@ -660,7 +484,7 @@ public class MainActivity extends AppCompatActivity {
         printAllMoves(st.parm.isAddFiguresSign());
     }
 
-    List<DisplayMoveItem> generateLst(boolean fShowFigures) {
+    List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
         List<DisplayMoveItem> lstMoves = new ArrayList<>();
 
         class EntryProcess {
@@ -752,7 +576,7 @@ public class MainActivity extends AppCompatActivity {
 
     void printAllMoves(boolean fShowFigures) {
 
-        lstMoveItemsDisplay = generateLst(fShowFigures);
+        lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
         String endString = null;
         if (st.lastGameState == GameState.Win) {
             endString = String.format("%s win", st.board.getSideToMove() == Side.WHITE ? "Black" : "White");
@@ -800,66 +624,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    enum MoveLegalResult {
-        AllOk,
-        NeedPromotion,
-        Bad
-    }
 
-    MoveLegalResult isMoveLegal(Move move, boolean checkNeedPromotion) {
-        if (move == null)
-            return MoveLegalResult.Bad;
-        if (move.getFrom() == Square.NONE || move.getTo() == Square.NONE)
-            return MoveLegalResult.Bad;
 
-        MoveList moves;
-        try {
-            moves = MoveGenerator.generateLegalMoves(st.board);
-        } catch (MoveGeneratorException e) {
-            Log.d(TAG, Utils.printException(e));
-            return MoveLegalResult.Bad;
-        }
 
-        MoveLegalResult res = MoveLegalResult.Bad;
-        Move mvToCheck = null;
-
-        for (Move mv : moves) {
-            //Log.d(TAG, "possible "+ mv.toString());
-            if (move.getTo() == mv.getTo() && move.getFrom() == mv.getFrom()) {
-
-                if (move.getPromotion() == Piece.NONE && mv.getPromotion() != Piece.NONE)
-                    res = MoveLegalResult.NeedPromotion;
-                else
-                    res = MoveLegalResult.AllOk;
-                mvToCheck = mv;
-                break;
-            }
-        }
-
-        if (mvToCheck != null) {
-            if (st.board.isMoveLegal(mvToCheck, true))
-                return res;
-            else
-                return MoveLegalResult.Bad;
-        }
-
-        return MoveLegalResult.Bad;
-
-    }
-
-    enum GameState {
-        InProcess,
-        Draw,
-        Win
-    }
-
-    GameState getGameState() {
-        if (st.board.isMated())
-            return GameState.Win;
-        if (st.board.isDraw())
-            return GameState.Draw;
-        return GameState.InProcess;
-    }
 
     public void onInputMove(View view) {
         try {
@@ -884,7 +651,7 @@ public class MainActivity extends AppCompatActivity {
             if (st.curMove.length() >= 4) {
 
                 Move move = moveFromString(st.curMove);
-                MoveLegalResult res = isMoveLegal(move, true);
+                MoveLegalResult res = ChessLibWrapper.isMoveLegal(move, st.board, true);
 
                 if (res == MoveLegalResult.AllOk) {
                     Log.d(TAG, "do user move " + st.curMove);
