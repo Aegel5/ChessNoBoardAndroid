@@ -30,8 +30,8 @@ public class Utils {
         f.setExecutable(true);
         return f.getPath();
     }
-    static  public String printException(Exception e)
-    {
+
+    static public String printException(Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
@@ -39,73 +39,3 @@ public class Utils {
         return e.toString() + "\n" + sStackTrace;
     }
 }
-
-//    int executeCommandLine()
-//    {
-//        //Log.d("executeCommandLine", "try execute cmd " + commandLine);
-//        String path = "ff";
-//
-//        Log.d("executeCommandLine", Build.HARDWARE);
-//        //String abis =
-//        for (String item:Build.SUPPORTED_32_BIT_ABIS
-//             ) {
-//            Log.d("executeCommandLine", item);
-//        }
-//
-//
-//        try {
-//
-//            path = UzipFileFromAsset("stockfish_exe_32");
-//            //path = UzipFileFromAsset("stockfish_10_x64");
-//            //path = UzipFileFromAsset("test.txt");
-//
-//            File f = new File(path);
-//
-//            Log.d("executeCommandLine", "path:" + path);
-//
-//            Log.d("executeCommandLine", "space:" + f.length());
-//
-//
-//
-//            ProcessBuilder pbuilder = new ProcessBuilder(path);
-//            //ProcessBuilder pbuilder = new ProcessBuilder("adb", "shell", "cat", "/proc/cpuinfo");
-//            //adb shell cat /proc/cpuinfo
-//            //Redirect.
-//            //pbuilder.redirectOutput()
-//            Process process = pbuilder.start();
-//
-//            //process.
-//
-//            InputStream output = process.getInputStream();
-//            //InputStream output2 = getInputStream();
-//
-//            Log.d("executeCommandLine", "available:" + output.available());
-//            //Log.d("executeCommandLine", "available:" + output.available());
-//
-//            process.waitFor();
-//
-//            Log.d("executeCommandLine", "available:" + output.available());
-//
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-//            StringBuffer output2 = new StringBuffer();
-//            char[] buffer = new char[4096];
-//            int read;
-//
-//            while ((read = reader.read(buffer)) > 0) {
-//                output2.append(buffer, 0, read);
-//            }
-//
-////            while ((current = output.) >= 0)
-////                Console.Write((char)current);
-////
-//
-//
-//            Log.d("executeCommandLine", "msg2:" + output2.toString());
-//
-//            return process.exitValue();
-//
-//        } catch (Exception e) {
-//            Log.d("executeCommandLine", "ошибка: " + e.toString());
-//            throw new RuntimeException("Unable to execute '" + path + "'", e);
-//        }
-//    }

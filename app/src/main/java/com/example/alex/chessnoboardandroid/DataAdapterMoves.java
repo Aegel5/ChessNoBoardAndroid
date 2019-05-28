@@ -1,7 +1,6 @@
 package com.example.alex.chessnoboardandroid;
 
 import android.content.Context;
-import android.provider.ContactsContract;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,12 +14,15 @@ import java.util.List;
 
 class DisplayMoveItem{
     int moveNum = 1;
-    String whitemove = "";
-    String blackmove = "";
+    String whiteMove = "";
+    String blackMove = "";
     String simpleString = null;
 }
 
-class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
+/*
+Адаптер для отображения списка ходов
+ */
+class DataAdapterMoves extends RecyclerView.Adapter<DataAdapterMoves.ViewHolder> {
 
     final int ITEM_SIMPLE_STRING = 1;
 
@@ -33,11 +35,11 @@ class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
 
 
 
-    DataAdapter(Context context) {
+    DataAdapterMoves(Context context) {
         this.inflater = LayoutInflater.from(context);
     }
     @Override
-    public DataAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public DataAdapterMoves.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
         @LayoutRes int resource = R.layout.list_item_move;
         if(viewType == ITEM_SIMPLE_STRING)
@@ -56,7 +58,7 @@ class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(DataAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(DataAdapterMoves.ViewHolder holder, int position) {
         DisplayMoveItem phone = phones.get(position);
 
         if(holder.simpleString != null) {
@@ -65,8 +67,8 @@ class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
         else {
 
             holder.tv1.setText(String.format("%s.", phone.moveNum));
-            holder.tv2.setText(phone.whitemove);
-            holder.tv3.setText(phone.blackmove);
+            holder.tv2.setText(phone.whiteMove);
+            holder.tv3.setText(phone.blackMove);
         }
     }
 

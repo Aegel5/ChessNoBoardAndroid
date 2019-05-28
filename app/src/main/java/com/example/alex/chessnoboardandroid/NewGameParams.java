@@ -2,8 +2,8 @@ package com.example.alex.chessnoboardandroid;
 
 enum AllowViewBoardMode {
     None(0),
-    AllowViewTextBoard(3),
-    AllowViewGraphicsBoard(4);
+    AllowViewTextBoard(1),
+    AllowViewGraphicsBoard(2);
 
     private int index;
 

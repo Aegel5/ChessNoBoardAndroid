@@ -17,9 +17,9 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
 
     private static final String TAG = MainApp.MainTag + UCIWrapper.class.getSimpleName();
 
-    TextView strengthLabel;
-    String origLabel;
-    Spinner spinner;
+    private TextView strengthLabel;
+    private String origLabel;
+    private Spinner spinnerAllowBoard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +35,8 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
         String jsonObj = getIntent().getStringExtra("prevParm");
         NewGameParams prevParm = (new Gson()).fromJson(jsonObj, NewGameParams.class);
 
-        spinner = findViewById(R.id.spinner);
-        spinner.setSelection(prevParm.getAllowViewBoardMode().getIndex());
+        spinnerAllowBoard = findViewById(R.id.spinnerAllowBoard);
+        spinnerAllowBoard.setSelection(prevParm.getAllowViewBoardMode().getIndex());
 
         Log.d(TAG, String.format("onCreate NewGameActivity. strengthLabel=%s", Boolean.toString(strengthLabel != null)));
 
@@ -48,7 +48,7 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
 
         NewGameParams newGameParm = new NewGameParams();
 
-        int pos = spinner.getSelectedItemPosition();
+        int pos = spinnerAllowBoard.getSelectedItemPosition();
         newGameParm.setAllowViewBoardMode(AllowViewBoardMode.fromId(pos));
 
         newGameParm.setCompStrength(((SeekBar)findViewById(R.id.seekBar)).getProgress());

@@ -18,10 +18,10 @@ import java.util.concurrent.TimeoutException;
 public class UCIWrapper {
 
     private static final String TAG = MainApp.MainTag + UCIWrapper.class.getSimpleName();
-    Process process = null;
-    Thread threadReader = null;
-    List<String> currentOutput = Collections.synchronizedList(new ArrayList<>());
-    BufferedWriter out = null;
+    private Process process = null;
+    private Thread threadReader = null;
+    private List<String> currentOutput = Collections.synchronizedList(new ArrayList<>());
+    private BufferedWriter out = null;
 
 
     public void init(String path) throws IOException {
@@ -88,12 +88,12 @@ public class UCIWrapper {
 
         out.write(cmd);
         out.newLine();
-        //OutputStreamWriter writer = new OutputStreamWriter(process.getOutputStream());
-        //writer.write(cmd);
         out.flush();
-        //writer.flush();
     }
 
+    /*
+     Дождаться определенного сообщения
+     */
     public String wait(String output) throws InterruptedException, TimeoutException {
         long timeout = 5000;
         long start = System.currentTimeMillis();
@@ -127,24 +127,16 @@ public class UCIWrapper {
                     tok = scanner.getNext();
                     if (tok == null)
                         break;
-                    if(tok.equals("cp")){
+                    if (tok.equals("cp")) {
                         tok = scanner.getNext();
-                        if(tok == null)
+                        if (tok == null)
                             break;
-                        uciMove.score = Integer.valueOf(tok);
-                    } else if(tok.equals("mate")){
+                        uciMove.setScore(Integer.valueOf(tok));
+                    } else if (tok.equals("mate")) {
                         tok = scanner.getNext();
-                        if(tok == null)
+                        if (tok == null)
                             break;
-                        int mateIn = Integer.valueOf(tok);
-                        if(mateIn == 1)
-                            uciMove.score = 16;
-                        else if(mateIn == 2)
-                            uciMove.score = 12;
-                        else if(mateIn == 3)
-                            uciMove.score = 8;
-                        else
-                            uciMove.score = 7;
+                        uciMove.setMateIn(Integer.valueOf(tok));
                     }
 
 
@@ -153,10 +145,10 @@ public class UCIWrapper {
                     tok = scanner.getNext();
                     if (tok == null)
                         break;
-                    uciMove.move = tok;
+                    uciMove.setMove(tok);
                 }
                 if (uciMove.isValid()) {
-                        moves.put(uciMove.move, uciMove);
+                    moves.put(uciMove.getMove(), uciMove);
                     break;
                 }
             }
@@ -164,22 +156,15 @@ public class UCIWrapper {
         return moves;
     }
 
-//    public String curOutput() {
-//        StringBuilder result = new StringBuilder();
-//        for (String line : currentOutput) {
-//            //Log.d(TAG, line);
-//            result.append(line);
-//            result.append("\n");
-//        }
-//        return result.toString();
-//    }
-
     public void clearOutput() {
         currentOutput.clear();
     }
 
-    public List<String> curLines(){
-        return  currentOutput;
+    /*
+        НЕ ДЕЛАЕТ копию списка (для оптимизации). Коллекция thread safe.
+     */
+    public List<String> curLines() {
+        return currentOutput;
     }
 
 }

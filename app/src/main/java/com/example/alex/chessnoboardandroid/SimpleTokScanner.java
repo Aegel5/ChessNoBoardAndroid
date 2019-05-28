@@ -2,7 +2,8 @@ package com.example.alex.chessnoboardandroid;
 
 public class SimpleTokScanner {
     private static final String TAG = MainApp.MainTag + SimpleTokScanner.class.getSimpleName();
-    String text;
+    
+    private String text;
     private int curPos = 0;
     private int numTokReturned = 0;
 
