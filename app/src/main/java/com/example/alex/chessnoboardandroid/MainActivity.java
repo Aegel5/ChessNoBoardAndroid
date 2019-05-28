@@ -9,9 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.Selection;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -20,7 +17,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -53,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     ToggleButton btnIsCompEnabled = null;
     BoardViewListener boardViewListener;
     Button btnBoard;
-    PopupWindow popupWindow;
+    PopupWindow popupWindowBoard;
     TextView boardView;
     final Handler handler = new Handler();
     CompMoveWaiter compMoveWaiter = null;
@@ -110,22 +106,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            if(st.parm.boardMode == BoardMode.Hardcore)
+            if(st.parm.getAllowViewBoardMode() == AllowViewBoardMode.None)
                 return false;
+            boolean allowShowBoard = st.parm.getAllowViewBoardMode().getIndex() >= AllowViewBoardMode.AllowViewTextBoard.getIndex();
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    if(st.parm.boardMode == BoardMode.AllowViewFigures)
-                        printAllMoves(true);
-                    if(st.parm.boardMode.getIndex() >= BoardMode.AllowViewTextBoard.getIndex()){
+                    if(allowShowBoard){
                         showBoardPopup();
                     }
                     break;
                 case MotionEvent.ACTION_UP: // отпускание
                 case MotionEvent.ACTION_CANCEL:
-                    if(st.parm.boardMode == BoardMode.AllowViewFigures)
-                        printAllMoves(false);
-                    if(st.parm.boardMode.getIndex() >= BoardMode.AllowViewTextBoard.getIndex()){
-                        popupWindow.dismiss();
+                    if(popupWindowBoard != null) {
+                        popupWindowBoard.dismiss();
                     }
                     break;
             }
@@ -153,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
         boolean focusable = true; // lets taps outside the popup also dismiss it
-        popupWindow = new PopupWindow(popupView, width, height, focusable);
+        popupWindowBoard = new PopupWindow(popupView, width, height, focusable);
         boardView = popupView.findViewById(R.id.boardView);
     }
 
@@ -187,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             boardView.setText(result.toString());
-            popupWindow.showAtLocation(btnBoard, Gravity.CENTER, 0, 0);
+            popupWindowBoard.showAtLocation(btnBoard, Gravity.CENTER, 0, 0);
 
         } catch (Exception e) {
             Log.d(TAG, "Exception showBoardPopup: " + e.toString());
@@ -477,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
 
     void updateCompOnButtonText(){
         btnIsCompEnabled.setChecked(st.compEnabled);
-        btnIsCompEnabled.setTextOn(String.format("on(%d)", st.parm.compStrength));
+        btnIsCompEnabled.setTextOn(String.format("on(%d)", st.parm.getCompStrength()));
         btnIsCompEnabled.setTextOff(String.format("off"));
     }
 
@@ -486,7 +479,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             st = new GameData();
 
-            int level = parms.compStrength;
+            int level = parms.getCompStrength();
             if (level < 0 || level > 20)
                 throw new RuntimeException("wrong level " + level);
             st.parm = parms;
@@ -585,7 +578,7 @@ public class MainActivity extends AppCompatActivity {
                 Map<String, UciMove> allMoves = uci.getCurrentMovesScore();
                 if (allMoves.isEmpty())
                     throw new RuntimeException("moves is empty, buy best move exists");
-                int minDeltaScore = StrengthRules.getMinDeltaScoreForLevel(st.parm.compStrength);
+                int minDeltaScore = StrengthRules.getMinDeltaScoreForLevel(st.parm.getCompStrength());
                 int bestScore = allMoves.get(bestMoveString).score;
 
                 int minPossibleScore = bestScore - minDeltaScore;
@@ -610,8 +603,8 @@ public class MainActivity extends AppCompatActivity {
                 if(minPossibleScore > previusScore) {
                     // Пользователь зевнул, на низких уровнях не будем принимать его зевок
                     double total = minPossibleScore - previusScore;
-                    double step = total / NewGameParams.maxLevel;
-                    double addFor = step * st.parm.compStrength;
+                    double step = total / NewGameParams.getMaxLevel();
+                    double addFor = step * st.parm.getCompStrength();
                     minPossibleScore = previusScore + (int)Math.round(addFor);
                     Log.d(TAG, String.format("уменьшаем minPossibleScore %d -> %d ", origMinPossibleScore, minPossibleScore));
 
@@ -645,7 +638,7 @@ public class MainActivity extends AppCompatActivity {
                         st.board.getSideToMove().toString(),
                         moveUci.move, moveUci.score,
                         possibleMoves.size(), allmv.toString(), allMoves.size(),
-                        bestMoveString, bestScore, st.parm.compStrength));
+                        bestMoveString, bestScore, st.parm.getCompStrength()));
 
             }
 
@@ -685,12 +678,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void printAllMoves() {
-        boolean fShowFigures = false;
-        if(st.parm.boardMode.getIndex() >= BoardMode.AlwaysViewFigures.getIndex()){
-            fShowFigures = true;
-        }
-
-        printAllMoves(fShowFigures);
+        printAllMoves(st.parm.isAddFiguresSign());
     }
 
     List<DisplayMoveItem> generateLst(boolean fShowFigures)
@@ -815,27 +803,6 @@ public class MainActivity extends AppCompatActivity {
                 mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount() - 1);
             }
         });
-
-
-
-
-//
-//        String val = result.toString();
-//        textMoves.setText(val);
-//        ScrollView scroll = findViewById(R.id.scrollView);
-//        scroll.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                scroll.fullScroll(ScrollView.FOCUS_DOWN);
-//            }
-//        });
-        //scroll.fullScroll(View.FOCUS_DOWN);
-        //textMoves.setScrollY(textMoves.getBottom());
-        //textMoves.scrollTo(0, 999999);
-        //textMoves.sro(val, val.length());
-
-
-
 
     }
 

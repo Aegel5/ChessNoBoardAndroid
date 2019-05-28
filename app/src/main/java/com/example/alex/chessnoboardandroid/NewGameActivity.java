@@ -27,8 +27,7 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
         setContentView(R.layout.activity_new_game);
 
 
-
-        final SeekBar seekBar = (SeekBar)findViewById(R.id.seekBar);
+        final SeekBar seekBar = findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(this);
         strengthLabel = findViewById(R.id.strengthLabel);
         origLabel = strengthLabel.getText().toString();
@@ -37,11 +36,11 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
         NewGameParams prevParm = (new Gson()).fromJson(jsonObj, NewGameParams.class);
 
         spinner = findViewById(R.id.spinner);
-        spinner.setSelection(prevParm.boardMode.getIndex());
+        spinner.setSelection(prevParm.getAllowViewBoardMode().getIndex());
 
-        Log.d(TAG, String.format("onCreate NewGameActivity. strengthLabel=%s", Boolean.toString(strengthLabel!=null)));
+        Log.d(TAG, String.format("onCreate NewGameActivity. strengthLabel=%s", Boolean.toString(strengthLabel != null)));
 
-        seekBar.setProgress(prevParm.compStrength);
+        seekBar.setProgress(prevParm.getCompStrength());
         updateLabel(seekBar.getProgress());
     }
 
@@ -50,9 +49,9 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
         NewGameParams newGameParm = new NewGameParams();
 
         int pos = spinner.getSelectedItemPosition();
-        newGameParm.boardMode = BoardMode.fromId(pos);
+        newGameParm.setAllowViewBoardMode(AllowViewBoardMode.fromId(pos));
 
-        newGameParm.compStrength = ((SeekBar) findViewById(R.id.seekBar)).getProgress();
+        newGameParm.setCompStrength(((SeekBar)findViewById(R.id.seekBar)).getProgress());
         Intent returnIntent = new Intent();
         returnIntent.putExtra("newGameParm", (new Gson()).toJson(newGameParm));
         setResult(Activity.RESULT_OK, returnIntent);

@@ -1,43 +1,71 @@
 package com.example.alex.chessnoboardandroid;
 
-
-import com.github.bhlangonijr.chesslib.Square;
-
-enum BoardMode
-{
-    Hardcore(0),
-    AllowViewFigures(1),
-    AlwaysViewFigures(2),
+enum AllowViewBoardMode {
+    None(0),
     AllowViewTextBoard(3),
-    AllowViewGraphicsBoard(4),
-    ClassicalGame(5);
+    AllowViewGraphicsBoard(4);
 
     private int index;
 
-    private BoardMode(int index) {
+    AllowViewBoardMode(int index) {
         this.index = index;
     }
 
-    public static BoardMode fromId(int id) {
-        for (BoardMode type : values()) {
+    public static AllowViewBoardMode fromId(int id) {
+        for (AllowViewBoardMode type : values()) {
             if (type.index == id) {
                 return type;
             }
         }
-        return AlwaysViewFigures;
+        return None;
     }
 
-    int getIndex(){
+    public int getIndex() {
         return index;
     }
 
 }
+
 public class NewGameParams {
 
-    public BoardMode boardMode = BoardMode.AlwaysViewFigures;
-    public int compStrength = 10;
-    public boolean isMaxStrength(){
-        return compStrength >= maxLevel;
+    private static final int maxLevel = 20;
+
+    // Можно ли подсматривать на доску
+    private AllowViewBoardMode allowViewBoardMode = AllowViewBoardMode.None;
+
+    private int compStrength = 10;
+
+    private boolean addFiguresSign = true;
+
+    public static int getMaxLevel() {
+        return maxLevel;
     }
-    static final int maxLevel = 20;
+
+    public boolean isMaxStrength() {
+        return getCompStrength() >= getMaxLevel();
+    }
+
+    public int getCompStrength() {
+        return compStrength;
+    }
+
+    public AllowViewBoardMode getAllowViewBoardMode() {
+        return allowViewBoardMode;
+    }
+
+    public void setAllowViewBoardMode(AllowViewBoardMode allowViewBoardMode) {
+        this.allowViewBoardMode = allowViewBoardMode;
+    }
+
+    public void setCompStrength(int compStrength) {
+        this.compStrength = compStrength;
+    }
+
+    public boolean isAddFiguresSign() {
+        return addFiguresSign;
+    }
+
+    public void setAddFiguresSign(boolean addFiguresSign) {
+        this.addFiguresSign = addFiguresSign;
+    }
 }

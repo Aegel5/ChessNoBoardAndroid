@@ -28,9 +28,9 @@ public class StrengthRules {
             result = 300;
         // дальше равномерно
         else {
-            double count = NewGameParams.maxLevel - 5;
+            double count = NewGameParams.getMaxLevel() - 5;
             double step = 200.0 /count;
-            result = (int) ((NewGameParams.maxLevel - level) * step);
+            result = (int) ((NewGameParams.getMaxLevel() - level) * step);
         }
         Log.d(TAG, String.format("delta score for level %d is %d", level, result));
         return result;
@@ -38,7 +38,7 @@ public class StrengthRules {
 
     static private int floatDeltaScore(int level){
         // с более высокого есть шанс перейти на более низкий (зевок)
-        double prob = (NewGameParams.maxLevel - level) * 0.005;
+        double prob = (NewGameParams.getMaxLevel() - level) * 0.005;
         if(MainApp.isprob(prob)){
             int newlevel = MainApp.rndFromRange(0, level);
             Log.d(TAG, String.format("Tag decress with prob %f from level %d to %d", prob, level, newlevel));
