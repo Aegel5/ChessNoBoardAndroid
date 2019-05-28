@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    String getUnicodeFromPiece(Piece piece) {
+    private String getUnicodeFromPiece(Piece piece) {
         if (piece == Piece.WHITE_KING) return (Character.toString((char) 0x2654));
         else if (piece == Piece.WHITE_QUEEN) return (Character.toString((char) 0x2655));
         else if (piece == Piece.WHITE_ROOK) return (Character.toString((char) 0x2656));
@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    public void showBoardPopup() {
+    private void showBoardPopup() {
         try {
             Log.d(TAG, "showBoardPopup");
 
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void doMove(String move) {
+    public void doMove(String move) {
         st.board.doMove(new Move(move, st.board.getSideToMove()));
     }
 
@@ -218,9 +218,7 @@ public class MainActivity extends AppCompatActivity {
         activityStarted = true;
     }
 
-
-
-    void loadPrevState(String stateString) {
+    private void loadPrevState(String stateString) {
         Log.d(TAG, "loadPrevState");
 
         if (stateString == null)
@@ -280,12 +278,12 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
     }
 
-    GameState getGameState()
+    private GameState getGameState()
     {
         return ChessLibWrapper.getGameState(st.board);
     }
 
-    void revertMove() {
+    private void revertMove() {
         try {
             if (compMoveWaiter != null)
                 return;
@@ -331,12 +329,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void updateGui() {
+    private void updateGui() {
         printAllMoves();
         updateButtonTexts();
     }
 
-    void updateButtonTexts() {
+    private void updateButtonTexts() {
         boolean fLetters = true;
         boolean fPromotion = false;
         if (st.curMove.length() == 4)
@@ -370,13 +368,13 @@ public class MainActivity extends AppCompatActivity {
         moveTaskToBack(false);
     }
 
-    void updateCompOnButtonText() {
+    private void updateCompOnButtonText() {
         btnIsCompEnabled.setChecked(st.compEnabled);
         btnIsCompEnabled.setTextOn(String.format("on(%d)", st.parm.getCompStrength()));
         btnIsCompEnabled.setTextOff(String.format("off"));
     }
 
-    GameData startNewGame(NewGameParams parms) {
+    private GameData startNewGame(NewGameParams parms) {
 
         try {
             st = new GameData();
@@ -406,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void doIntMove(Move move) {
+    private void doIntMove(Move move) {
         st.board.doMove(move);
         st.lastGameState = getGameState();
     }
@@ -460,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void doCompMove() {
+    private void doCompMove() {
         try {
 
             if (compMoveWaiter != null)
@@ -480,11 +478,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void printAllMoves() {
+    private void printAllMoves() {
         printAllMoves(st.parm.isAddFiguresSign());
     }
 
-    List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
+    private List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
         List<DisplayMoveItem> lstMoves = new ArrayList<>();
 
         class EntryProcess {
@@ -574,7 +572,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    void printAllMoves(boolean fShowFigures) {
+    private void printAllMoves(boolean fShowFigures) {
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
         String endString = null;
@@ -608,7 +606,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    Square parseSquare(String sq) {
+    private Square parseSquare(String sq) {
         try {
             return Square.fromValue(sq.toUpperCase());
         } catch (Exception e) {
@@ -616,17 +614,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    Move moveFromString(String moveString) {
+    private Move moveFromString(String moveString) {
         try {
-            return new Move(moveString, st.board.getSideToMove());
+            return ChessLibWrapper.moveFromString(moveString, st.board);
         } catch (Exception e) {
             return null;
         }
     }
-
-
-
-
 
     public void onInputMove(View view) {
         try {
