@@ -3,7 +3,7 @@ package com.example.alex.chessnoboardandroid;
 import android.util.Log;
 
 public class StrengthRules {
-    private static final String TAG = MainApp.MainTag + MainApp.class.getSimpleName();
+    private static final String TAG = MainApp.MainTag + StrengthRules.class.getSimpleName();
 
     static public int getMinDeltaScoreForLevel(int level) {
         return floatDeltaScore(level);
@@ -40,7 +40,7 @@ public class StrengthRules {
     }
 
     /*
-    Для большего рандома компьютер может перейти на более низкий уровень с небольшой вероятностью
+    Для большего рандома компьютер может перейти на более низкий уровень на один ход с небольшой вероятностью
     Эмуляция зевка для компьютера.
      */
     static private int floatDeltaScore(int level) {

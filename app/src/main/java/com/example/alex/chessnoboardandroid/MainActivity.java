@@ -185,9 +185,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestart() {
         Log.d(TAG, "onRestart");
         super.onRestart();
-
-
     }
+
 
     @Override
     protected void onPause() {
@@ -310,14 +309,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, item);
             }
             String stockFileName = "stockfish_exe_arm7";
-            //String stockFileName = "stockfish_exe_arm7_rand";
 
             if (found_x86)
                 stockFileName = "stockfish_exe_x86";
             String path = Utils.unzipExeFromAsset(stockFileName, this);
             uci.init(path);
-            //uci.send("uci");
-            //uci.wait("uciok");
 
             // показываем 50 возможных ходов и их score
             uci.send("setoption name MultiPV value 50");
@@ -329,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateGui() {
+    public void updateGui() {
         printAllMoves();
         updateButtonTexts();
     }
@@ -563,7 +559,6 @@ public class MainActivity extends AppCompatActivity {
                 curItem.whiteMove = curMv.toString();
             else
                 curItem.blackMove = curMv.toString();
-
 
             isWhite = !isWhite;
         }

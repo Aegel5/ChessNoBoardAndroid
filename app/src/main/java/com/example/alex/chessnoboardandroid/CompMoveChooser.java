@@ -64,8 +64,6 @@ public class CompMoveChooser {
                 if (previusScore != Integer.MAX_VALUE) {
                     Log.d(TAG, "found previous score " + previusScore);
                 }
-
-
             }
 
             int origMinPossibleScore = minPossibleScore;

@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 
 public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener {
 
-    private static final String TAG = MainApp.MainTag + UCIWrapper.class.getSimpleName();
+    private static final String TAG = MainApp.MainTag + NewGameActivity.class.getSimpleName();
 
     private TextView strengthLabel;
     private String origLabel;

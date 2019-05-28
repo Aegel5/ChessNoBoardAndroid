@@ -8,7 +8,7 @@ public class UciMove {
     private int mateIn = 0;
 
     public boolean isValid() {
-        return getMove() != null && (getScore() != Integer.MIN_VALUE || mateIn != 0);
+        return getMove() != null && (score != Integer.MIN_VALUE || mateIn != 0);
     }
 
     public String getMove() {
@@ -19,9 +19,11 @@ public class UciMove {
         this.move = move;
     }
 
+    /*
     public int getScore() {
         return score;
     }
+    */
 
     public void setScore(int score) {
         this.score = score;
