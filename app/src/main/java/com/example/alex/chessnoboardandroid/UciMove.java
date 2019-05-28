@@ -39,16 +39,19 @@ public class UciMove {
 
     // score с учетом мата в n ходов
     public int getUniversalScore() {
-        if (mateIn == 0)
+        if (mateIn == 0) {
+            if (score == Integer.MIN_VALUE)
+                throw new RuntimeException("bad state");
             return score;
+        }
         else if (mateIn == 1)
-            return 16;
+            return 1600; // 16 пешек
         else if (mateIn == 2)
-            return 12;
+            return 1200;
         else if (mateIn == 3)
-            return 8;
+            return 800;
         else
-            return 7;
+            return 700;
 
     }
 }
