@@ -206,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
         public Integer cp;
         public String cont;
         public  int number;
+        public  int mateIn;
     }
     HashMap<String, analitem> cur_hash = new HashMap<>();
 
@@ -280,6 +281,10 @@ public class MainActivity extends AppCompatActivity {
                         return; // max 10 sec analize
                     }
                     anCnt++;
+                    if(anCnt == 1) {
+                        uci2.clearOutput();
+                        return; // зделать нормальный timeout для очистки старых ходов либо проверку корректности хода.
+                    }
 
                     int cnt = 0;
 
@@ -292,29 +297,37 @@ public class MainActivity extends AppCompatActivity {
                             continue;
                         analitem item = new analitem();
                         item.cont = new String();
-                        boolean nextcp = false;
                         boolean nextpv = false;
                         String first = null;
                         while(true){
                             String cur = a.getNext();
                             if(cur == null)
                                 break;
-                            if(nextcp){
-                                item.cp = Integer.parseInt(cur);
-                                nextcp = false;
-                                continue;
-                            }
                             if(nextpv){
-                                if(first == null)
+                                if(first == null) {
+                                    //if(!tmpBoard.isMoveLegal(cur, false))
+                                      //  break;
                                     first = cur;
+                                }
                                 item.cont += " ";
                                 item.cont += cur;
                                 if(item.cont.length() >= 30)
                                     break;
                                 continue;
                             }
+                            if(cur.equals("mate")){
+                                cur = a.getNext();
+                                if (cur == null)
+                                    break;
+                                item.mateIn = -Integer.parseInt(cur);
+                                item.cp = 100000 * item.mateIn;
+                                continue;
+                            }
                             if(cur.equals("cp")) {
-                                nextcp = true;
+                                cur = a.getNext();
+                                if (cur == null)
+                                    break;
+                                item.cp = Integer.parseInt(cur);
                                 continue;
                             }
                             if(cur.equals("pv")){
@@ -336,10 +349,13 @@ public class MainActivity extends AppCompatActivity {
                         sorted.add(entry.getValue());
                     }
 
+                    boolean neg = tmpBoard.getSideToMove() == Side.BLACK;
+
+                    // todo use multipv instead of sort
                     Collections.sort(sorted, new Comparator<analitem>() {
                         @Override
                         public int compare(analitem u1, analitem u2) {
-                            return u2.cp.compareTo(u1.cp);
+                            return neg ? u1.cp.compareTo(u2.cp) : u2.cp.compareTo(u1.cp);
                         }
                     });
 
@@ -350,12 +366,18 @@ public class MainActivity extends AppCompatActivity {
 
                     curAnal.clear();
                     for (analitem cur: sorted) {
+                        String cpres;
+                        if(cur.mateIn != 0){
+                            cpres = "#"+ cur.mateIn;
+                        }else{
+                            cpres = String.format("%.2f", cur.cp/100.0);
+                        }
                         double dcp = ((double)cur.cp)/100.0;
                         if(myMove != null && cur.move.equals(myMove.toString())){
-                            curAnal.add(String.format("(%d) %.2f %s", cur.number, dcp, cur.cont));
+                            curAnal.add(String.format("(%d) %s %s", cur.number, cpres, cur.cont));
                         }
                         if (curAnal.size() < 5 ) {
-                            curAnal.add(String.format("%.2f %s", dcp, cur.cont));
+                            curAnal.add(String.format("%s %s", cpres, cur.cont));
                         }
                     }
                     //uci2.clearOutput(); // можем удалить те, которые еще не прочитали, но пофиг.
