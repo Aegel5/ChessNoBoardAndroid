@@ -127,7 +127,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Board" />
+                android:onClick="onLeft"
+                android:text="◀" />
+
+            <Button
+                android:id="@+id/btnBoard2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onRight"
+                android:text="▶" />
 
             <Button
                 android:id="@+id/btnBS"

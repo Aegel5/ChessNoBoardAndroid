@@ -1,6 +1,7 @@
 package com.example.alex.chessnoboardandroid;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +15,8 @@ import java.util.List;
 
 class DisplayMoveItem{
     int moveNum = 1;
+    boolean whiteSel = false;
+    boolean blackSel = false;
     String whiteMove = "";
     String blackMove = "";
     String simpleString = null;
@@ -69,6 +72,14 @@ class DataAdapterMoves extends RecyclerView.Adapter<DataAdapterMoves.ViewHolder>
             holder.tv1.setText(String.format("%s.", phone.moveNum));
             holder.tv2.setText(phone.whiteMove);
             holder.tv3.setText(phone.blackMove);
+            if(phone.whiteSel)
+                holder.tv2.setTypeface(Typeface.DEFAULT_BOLD);
+            else
+                holder.tv2.setTypeface(Typeface.DEFAULT);
+            if(phone.blackSel)
+                holder.tv3.setTypeface(Typeface.DEFAULT_BOLD);
+            else
+                holder.tv3.setTypeface(Typeface.DEFAULT);
         }
     }
 

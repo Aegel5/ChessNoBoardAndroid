@@ -19,6 +19,7 @@ class GameData {
     public transient Board board = null;
     public boolean compEnabled = false;
     public String[] moves;
+    public int seldelt;
 
     public String Serialize() {
 

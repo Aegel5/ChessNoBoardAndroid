@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String STATE_GAMESTATE = "gameState";
 
     private UCIWrapper uci = new UCIWrapper();
+    private UCIWrapper uci2 = new UCIWrapper();
     private Button[] buttonsLetters = null;
     private ToggleButton btnIsCompEnabled = null;
     private BoardViewListener boardViewListener;
@@ -175,10 +176,34 @@ public class MainActivity extends AppCompatActivity {
                 st = startNewGame(new NewGameParams());
             }
 
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    analyzer();
+                }
+            }, 1000);
+
         } catch (Exception e) {
             Log.d(TAG, Utils.printException(e));
             throw e;
         }
+    }
+
+    void analyzer(){
+        
+        try {
+
+        } catch (Exception e) {
+            Log.d(TAG, Utils.printException(e));
+        }
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                analyzer();
+            }
+        }, 1000);
+
     }
 
     @Override
@@ -314,11 +339,14 @@ public class MainActivity extends AppCompatActivity {
                 stockFileName = "stockfish_exe_x86";
             String path = Utils.unzipExeFromAsset(stockFileName, this);
             uci.init(path);
+            uci2.init(path);
 
             // показываем 50 возможных ходов и их score
             uci.send("setoption name MultiPV value 50");
+            uci2.send("setoption name MultiPV value 50");
 
             uci.clearOutput();
+            uci2.clearOutput();
 
         } catch (Exception e) {
             Log.d(TAG, Utils.printException(e));
@@ -407,9 +435,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     class CompMoveWaiter {
-        public CompMoveWaiter(int time) {
+
+        boolean analize;
+
+
+        public CompMoveWaiter(int time, boolean analize) {
+            this.analize = analize;
             scheduleWait(time);
         }
+
+
 
         int lastCheckedIndex = 0;
 
@@ -428,25 +463,31 @@ public class MainActivity extends AppCompatActivity {
 
             try {
 
+                if(analize){
+                    List<String> lines = uci.curLines();
+                    printAllMoves2(lines);
+                    compMoveWaiter = null;
+                }else {
 
-                List<String> lines = uci.curLines();
-                String bestMoveLine = null;
-                if (!lines.isEmpty()) {
-                    for (; lastCheckedIndex < lines.size(); lastCheckedIndex++) {
-                        String line = lines.get(lastCheckedIndex);
-                        if (line.startsWith("bestmove")) {
-                            bestMoveLine = line;
-                            break;
+                    List<String> lines = uci.curLines();
+                    String bestMoveLine = null;
+                    if (!lines.isEmpty()) {
+                        for (; lastCheckedIndex < lines.size(); lastCheckedIndex++) {
+                            String line = lines.get(lastCheckedIndex);
+                            if (line.startsWith("bestmove")) {
+                                bestMoveLine = line;
+                                break;
+                            }
                         }
                     }
-                }
-                if (bestMoveLine != null) {
-                    compMoveWaiter = null;
+                    if (bestMoveLine != null) {
+                        compMoveWaiter = null;
 
-                    doIntMove(CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci));
-                    printAllMoves();
-                } else {
-                    scheduleWait(10);
+                        doIntMove(CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci));
+                        printAllMoves();
+                    } else {
+                        scheduleWait(10);
+                    }
                 }
             } catch (Exception e) {
                 Log.d(TAG, Utils.printException(e));
@@ -466,7 +507,7 @@ public class MainActivity extends AppCompatActivity {
             int timeToMove = 200;
             uci.send(String.format("go movetime %d", timeToMove));
 
-            compMoveWaiter = new CompMoveWaiter(timeToMove);
+            compMoveWaiter = new CompMoveWaiter(timeToMove, false);
 
 
         } catch (Exception e) {
@@ -474,8 +515,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void printAllMoves2(List<String> analizeLines) {
+        printAllMoves_int(st.parm.isAddFiguresSign(), analizeLines);
+    }
+
     private void printAllMoves() {
-        printAllMoves(st.parm.isAddFiguresSign());
+        printAllMoves_int(st.parm.isAddFiguresSign(), null);
     }
 
     private List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
@@ -519,6 +564,12 @@ public class MainActivity extends AppCompatActivity {
             moveToPrint.add(entry);
         }
 
+        if(st.seldelt > moveToPrint.size()-1)
+            st.seldelt = moveToPrint.size()-1;
+        else if(st.seldelt < 0)
+            st.seldelt = 0;
+        int sel = moveToPrint.size()-1-st.seldelt;
+
         DisplayMoveItem curItem = new DisplayMoveItem();
         for (int i = 0; i < moveToPrint.size(); i++) {
 
@@ -555,10 +606,16 @@ public class MainActivity extends AppCompatActivity {
                     curMv.append("+");
             }
 
-            if (isWhite)
+            boolean isSelected = i == sel;
+
+            if (isWhite) {
                 curItem.whiteMove = curMv.toString();
-            else
+                curItem.whiteSel = isSelected;
+            }
+            else {
                 curItem.blackMove = curMv.toString();
+                curItem.blackSel = isSelected;
+            }
 
             isWhite = !isWhite;
         }
@@ -567,9 +624,16 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void printAllMoves(boolean fShowFigures) {
+    private void printAllMoves_int(boolean fShowFigures, List<String> analizeLines) {
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
+        if(analizeLines != null) {
+            for (String s : analizeLines) {
+                DisplayMoveItem item = new DisplayMoveItem();
+                item.simpleString = s;
+                lstMoveItemsDisplay.add(item);
+            }
+        }
         String endString = null;
         if (st.lastGameState == GameState.Win) {
             endString = String.format("%s win", st.board.getSideToMove() == Side.WHITE ? "Black" : "White");
@@ -668,6 +732,22 @@ public class MainActivity extends AppCompatActivity {
         if (!st.curMove.isEmpty())
             st.curMove = st.curMove.substring(0, st.curMove.length() - 1);
         updateGui();
+    }
+
+
+    public void onLeft(View view) {
+        if(compMoveWaiter != null)
+            return;
+        st.seldelt++;
+        updateGui();
+    }
+
+    public void onRight(View view) {
+        if(compMoveWaiter != null)
+            return;
+        st.seldelt--;
+        updateGui();
+
     }
 
     public void onNewGame(View view) {
