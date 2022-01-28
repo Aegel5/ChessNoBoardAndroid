@@ -44,7 +44,7 @@ public class UCIWrapper {
                         Log.d(TAG, "line == null");
                         return;
                     } else {
-                        Log.d("UCI_READ_LINE", "line is " + line);
+                        //Log.d("UCI_READ_LINE", "line is " + line);
                         //Log.d(TAG, "UCI=" + line);
                     }
 
@@ -154,6 +154,12 @@ public class UCIWrapper {
             }
         }
         return moves;
+    }
+
+    List<String> takeList() {
+        List<String> copy = currentOutput;
+        currentOutput = Collections.synchronizedList(new ArrayList<>());
+        return copy;
     }
 
     public void clearOutput() {

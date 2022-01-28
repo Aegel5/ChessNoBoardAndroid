@@ -28,6 +28,8 @@ import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.google.gson.Gson;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private PopupWindow popupWindowBoard;
     private TextView boardView;
     private final Handler handler = new Handler();
+    private final Handler h2 = new Handler();
     private CompMoveWaiter compMoveWaiter = null;
     private GameData st;
     private boolean activityStarted = false;
@@ -179,10 +182,11 @@ public class MainActivity extends AppCompatActivity {
                 st = startNewGame(new NewGameParams());
             }
 
-            handler.postDelayed(new Runnable() {
+            h2.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     analyzer();
+                    h2.postDelayed(this, 1000);
                 }
             }, 1000);
 
@@ -192,109 +196,175 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    List<String> curAnal;
-    boolean stoped;
+    List<String> curAnal = new ArrayList<>();
+    boolean stoped = true;
     String curFen;
+    int anCnt;
 
     class analitem{
-        public int cp;
+        public String move;
+        public Integer cp;
         public String cont;
         public  int number;
+    }
+    HashMap<String, analitem> cur_hash = new HashMap<>();
+
+    void stop2(){
+        try {
+            if (!stoped) {
+                Log.d(TAG, "stop uci2");
+                uci2.send("stop");
+            }
+            stoped = true;
+        }
+        catch (Exception e) {
+            Log.d(TAG, Utils.printException(e));
+        }
     }
 
     void analyzer(){
 
+        //Log.d(TAG, "analize");
+
         try {
             if(st.seldelt <= 0){
 
-                curAnal = null;
+                curAnal.clear();
+                cur_hash.clear();
                 curFen = null;
 
-                if(!stoped)
-                    uci2.send("stop");
-                stoped = true;
+
+
+                stop2();
                 uci2.clearOutput();
 
                 return;
             }else{
-                String fen = st.board.getFen();
 
-                if(fen != curFen){
+                int tot = st.board.getBackup().size();
+                int curm = 0;
+                Board tmpBoard = new Board();
+                Move myMove = null;
+                for (MoveBackup moveBackup : st.board.getBackup()) {
+                    Move curMove = moveBackup.getMove();
+                    if(curm == tot-st.seldelt) {
+                        myMove = curMove;
+                        break;
+                    }
+                    curm++;
+
+                    tmpBoard.doMove(curMove);
+                }
+
+                String fen = tmpBoard.getFen();
+
+                //Log.d(TAG, fen);
+                //Log.d(TAG, curFen);
+
+                if(!fen.equals(curFen)){
+                    cur_hash.clear();
+                    curAnal.clear();
+                    stoped = false;
+                    anCnt = 0;
                     curFen = fen;
                     uci2.send("stop");
-                    uci.send(String.format("position fen %s", fen));
                     uci2.clearOutput();
-                    uci2.send("go");
+                    Log.d(TAG, "start uci2 with new position");
+                    uci2.send(String.format("position fen %s", fen));
+                    uci2.send("go infinite");
 
                 }else{
-                    curAnal = new ArrayList<>();
+                    if(anCnt >= 30){
+                        stop2();
+                        uci2.clearOutput();
+                        return; // max 10 sec analize
+                    }
+                    anCnt++;
+
                     int cnt = 0;
-                    HashMap<String, analitem> hash = new HashMap<>();
-                    analitem item = new analitem();
-                    item.cont = new String();
-                    for (String s: uci2.curLines()) {
+
+                    List<String> ln = uci2.takeList();
+                    for (int i = 0; i < ln.size(); i++) { // маленькая вероятно, но все же могут параллельно добавиться, но нам пофиг, но используем индекс.
+                        String s = ln.get(i);
                         SimpleTokScanner a = new SimpleTokScanner(s);
+                        String pp = a.getNext();
+                        if(!pp.equals("info"))
+                            continue;
+                        analitem item = new analitem();
+                        item.cont = new String();
                         boolean nextcp = false;
                         boolean nextpv = false;
-                        boolean exit1 = false;
                         String first = null;
-                        while(!exit1){
+                        while(true){
                             String cur = a.getNext();
                             if(cur == null)
                                 break;
                             if(nextcp){
-                                item.cp = -Integer.parseInt(cur);
+                                item.cp = Integer.parseInt(cur);
                                 nextcp = false;
-                                break;
+                                continue;
                             }
                             if(nextpv){
                                 if(first == null)
                                     first = cur;
                                 item.cont += " ";
                                 item.cont += cur;
-                                if(item.cont.length() >= 10)
-                                    exit1 = true;
-                                break;
+                                if(item.cont.length() >= 30)
+                                    break;
+                                continue;
                             }
-                            if(cur == "cp") {
+                            if(cur.equals("cp")) {
                                 nextcp = true;
-                                break;
+                                continue;
                             }
-                            if(cur == "pv"){
+                            if(cur.equals("pv")){
                                 nextpv = true;
-                                break;
+                                continue;
                             }
                         }
                         if(first != null){
-                            hash.put(first, item);
+                            item.move = first;
+                            cur_hash.put(first, item);
                         }
                     }
 
-                    TreeMap<Integer, analitem> sorted = new TreeMap<Integer, analitem>();
+                    Log.d(TAG, "hash has");
 
-                    for (Map.Entry<String, analitem> entry: hash.entrySet()) {
-                        sorted.put(entry.getValue().cp, entry.getValue());
+                    List<analitem> sorted = new ArrayList<>();
+
+                    for (Map.Entry<String, analitem> entry: cur_hash.entrySet()) {
+                        sorted.add(entry.getValue());
                     }
+
+                    Collections.sort(sorted, new Comparator<analitem>() {
+                        @Override
+                        public int compare(analitem u1, analitem u2) {
+                            return u2.cp.compareTo(u1.cp);
+                        }
+                    });
 
                     int curnumb = 1;
-                    for (Map.Entry<Integer, analitem> entry: sorted.entrySet()) {
-                        entry.getValue().number = curnumb++;
+                    for (analitem entry: sorted) {
+                        entry.number = curnumb++;
                     }
 
-                    uci2.clearOutput();
+                    curAnal.clear();
+                    for (analitem cur: sorted) {
+                        double dcp = ((double)cur.cp)/100.0;
+                        if(myMove != null && cur.move.equals(myMove.toString())){
+                            curAnal.add(String.format("(%d) %.2f %s", cur.number, dcp, cur.cont));
+                        }
+                        if (curAnal.size() < 5 ) {
+                            curAnal.add(String.format("%.2f %s", dcp, cur.cont));
+                        }
+                    }
+                    //uci2.clearOutput(); // можем удалить те, которые еще не прочитали, но пофиг.
+                    printAllMoves();
                 }
             }
         } catch (Exception e) {
             Log.d(TAG, Utils.printException(e));
         }
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                analyzer();
-            }
-        }, 1000);
-
     }
 
     @Override
@@ -527,11 +597,9 @@ public class MainActivity extends AppCompatActivity {
 
     class CompMoveWaiter {
 
-        boolean analize;
 
 
-        public CompMoveWaiter(int time, boolean analize) {
-            this.analize = analize;
+        public CompMoveWaiter(int time) {
             scheduleWait(time);
         }
 
@@ -554,32 +622,26 @@ public class MainActivity extends AppCompatActivity {
 
             try {
 
-                if(analize){
-                    List<String> lines = uci.curLines();
-                    printAllMoves2(lines);
-                    compMoveWaiter = null;
-                }else {
-
-                    List<String> lines = uci.curLines();
-                    String bestMoveLine = null;
-                    if (!lines.isEmpty()) {
-                        for (; lastCheckedIndex < lines.size(); lastCheckedIndex++) {
-                            String line = lines.get(lastCheckedIndex);
-                            if (line.startsWith("bestmove")) {
-                                bestMoveLine = line;
-                                break;
-                            }
+                List<String> lines = uci.curLines();
+                String bestMoveLine = null;
+                if (!lines.isEmpty()) {
+                    for (; lastCheckedIndex < lines.size(); lastCheckedIndex++) {
+                        String line = lines.get(lastCheckedIndex);
+                        if (line.startsWith("bestmove")) {
+                            bestMoveLine = line;
+                            break;
                         }
                     }
-                    if (bestMoveLine != null) {
-                        compMoveWaiter = null;
-
-                        doIntMove(CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci));
-                        printAllMoves();
-                    } else {
-                        scheduleWait(10);
-                    }
                 }
+                if (bestMoveLine != null) {
+                    compMoveWaiter = null;
+
+                    doIntMove(CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci));
+                    printAllMoves();
+                } else {
+                    scheduleWait(10);
+                }
+
             } catch (Exception e) {
                 Log.d(TAG, Utils.printException(e));
             }
@@ -598,7 +660,7 @@ public class MainActivity extends AppCompatActivity {
             int timeToMove = 200;
             uci.send(String.format("go movetime %d", timeToMove));
 
-            compMoveWaiter = new CompMoveWaiter(timeToMove, false);
+            compMoveWaiter = new CompMoveWaiter(timeToMove);
 
 
         } catch (Exception e) {
@@ -606,27 +668,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void printAllMoves2(List<String> analizeLines) {
-        printAllMoves_int(st.parm.isAddFiguresSign(), analizeLines);
-    }
-
     private void printAllMoves() {
-        printAllMoves_int(st.parm.isAddFiguresSign(), null);
+        printAllMoves_int(st.parm.isAddFiguresSign());
     }
 
-    private List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
-        List<DisplayMoveItem> lstMoves = new ArrayList<>();
+    class EntryProcess {
+        String moveStr = "";
+        Piece piece = Piece.NONE;
+        Piece pieceTo = Piece.NONE;
+        //String fen;
+        boolean isCheck = false;
+    }
 
-        class EntryProcess {
-            String moveStr = "";
-            Piece piece = Piece.NONE;
-            Piece pieceTo = Piece.NONE;
-            boolean isCheck = false;
-        }
-
-        int moveCounter = 1;
-        boolean isWhite = true;
-
+    private List<EntryProcess> getHistory(){
         List<EntryProcess> moveToPrint = new ArrayList<>();
         Board tmpBoard = new Board();
         for (MoveBackup moveBackup : st.board.getBackup()) {
@@ -636,6 +690,7 @@ public class MainActivity extends AppCompatActivity {
             entry.moveStr = curMove.toString();
             entry.piece = moveBackup.getMovingPiece();
             entry.pieceTo = moveBackup.getCapturedPiece();
+            //entry.fen = tmpBoard.getFen();
             if (tmpBoard.isKingAttacked()) {
                 entry.isCheck = true;
             }
@@ -654,6 +709,16 @@ public class MainActivity extends AppCompatActivity {
             }
             moveToPrint.add(entry);
         }
+        return moveToPrint;
+    }
+
+    private List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
+        List<DisplayMoveItem> lstMoves = new ArrayList<>();
+
+        int moveCounter = 1;
+        boolean isWhite = true;
+
+        List<EntryProcess> moveToPrint = getHistory();
 
         if(st.seldelt > moveToPrint.size()-1)
             st.seldelt = moveToPrint.size()-1;
@@ -715,16 +780,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void printAllMoves_int(boolean fShowFigures, List<String> analizeLines) {
+    private void printAllMoves_int(boolean fShowFigures) {
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
-        if(analizeLines != null) {
-            for (String s : analizeLines) {
-                DisplayMoveItem item = new DisplayMoveItem();
-                item.simpleString = s;
-                lstMoveItemsDisplay.add(item);
-            }
+        for (String s : curAnal) {
+            DisplayMoveItem item = new DisplayMoveItem();
+            item.simpleString = s;
+            lstMoveItemsDisplay.add((item));
         }
+
         String endString = null;
         if (st.lastGameState == GameState.Win) {
             endString = String.format("%s win", st.board.getSideToMove() == Side.WHITE ? "Black" : "White");
@@ -789,7 +853,7 @@ public class MainActivity extends AppCompatActivity {
             Button button = (Button) view;
             String text = button.getText().toString();
 
-
+            st.seldelt = 0; // сбрасываем анализ.
             st.curMove += text;
 
             if (st.curMove.length() >= 4) {
@@ -829,6 +893,7 @@ public class MainActivity extends AppCompatActivity {
     public void onLeft(View view) {
         if(compMoveWaiter != null)
             return;
+        curAnal.clear();
         st.seldelt++;
         updateGui();
     }
@@ -836,6 +901,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRight(View view) {
         if(compMoveWaiter != null)
             return;
+        curAnal.clear();
         st.seldelt--;
         updateGui();
 
