@@ -28,8 +28,11 @@ import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.google.gson.Gson;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -189,10 +192,98 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void analyzer(){
-        
-        try {
+    List<String> curAnal;
+    boolean stoped;
+    String curFen;
 
+    class analitem{
+        public int cp;
+        public String cont;
+        public  int number;
+    }
+
+    void analyzer(){
+
+        try {
+            if(st.seldelt <= 0){
+
+                curAnal = null;
+                curFen = null;
+
+                if(!stoped)
+                    uci2.send("stop");
+                stoped = true;
+                uci2.clearOutput();
+
+                return;
+            }else{
+                String fen = st.board.getFen();
+
+                if(fen != curFen){
+                    curFen = fen;
+                    uci2.send("stop");
+                    uci.send(String.format("position fen %s", fen));
+                    uci2.clearOutput();
+                    uci2.send("go");
+
+                }else{
+                    curAnal = new ArrayList<>();
+                    int cnt = 0;
+                    HashMap<String, analitem> hash = new HashMap<>();
+                    analitem item = new analitem();
+                    item.cont = new String();
+                    for (String s: uci2.curLines()) {
+                        SimpleTokScanner a = new SimpleTokScanner(s);
+                        boolean nextcp = false;
+                        boolean nextpv = false;
+                        boolean exit1 = false;
+                        String first = null;
+                        while(!exit1){
+                            String cur = a.getNext();
+                            if(cur == null)
+                                break;
+                            if(nextcp){
+                                item.cp = -Integer.parseInt(cur);
+                                nextcp = false;
+                                break;
+                            }
+                            if(nextpv){
+                                if(first == null)
+                                    first = cur;
+                                item.cont += " ";
+                                item.cont += cur;
+                                if(item.cont.length() >= 10)
+                                    exit1 = true;
+                                break;
+                            }
+                            if(cur == "cp") {
+                                nextcp = true;
+                                break;
+                            }
+                            if(cur == "pv"){
+                                nextpv = true;
+                                break;
+                            }
+                        }
+                        if(first != null){
+                            hash.put(first, item);
+                        }
+                    }
+
+                    TreeMap<Integer, analitem> sorted = new TreeMap<Integer, analitem>();
+
+                    for (Map.Entry<String, analitem> entry: hash.entrySet()) {
+                        sorted.put(entry.getValue().cp, entry.getValue());
+                    }
+
+                    int curnumb = 1;
+                    for (Map.Entry<Integer, analitem> entry: sorted.entrySet()) {
+                        entry.getValue().number = curnumb++;
+                    }
+
+                    uci2.clearOutput();
+                }
+            }
         } catch (Exception e) {
             Log.d(TAG, Utils.printException(e));
         }
