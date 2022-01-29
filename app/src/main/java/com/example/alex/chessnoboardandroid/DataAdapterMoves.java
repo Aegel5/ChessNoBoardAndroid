@@ -15,6 +15,7 @@ import java.util.List;
 
 class DisplayMoveItem{
     int moveNum = 1;
+    boolean issel;
     boolean whiteSel = false;
     boolean blackSel = false;
     String whiteMove = "";
@@ -66,6 +67,7 @@ class DataAdapterMoves extends RecyclerView.Adapter<DataAdapterMoves.ViewHolder>
 
         if(holder.simpleString != null) {
             holder.simpleString.setText(phone.simpleString);
+            holder.simpleString.setTypeface(phone.issel ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
         }
         else {
 

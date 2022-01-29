@@ -204,9 +204,40 @@ public class MainActivity extends AppCompatActivity {
     class analitem{
         public String move;
         public Integer cp;
-        public String cont;
+        public List<String> cont = new ArrayList<>();
         public  int number;
         public  int mateIn;
+        String nice;
+
+        public String NiceCont(Board brd){
+            if(nice != null)
+                return nice;
+            Board tmp = new Board();
+            tmp.loadFromFen(brd.getFen());
+            StringBuilder curMv = new StringBuilder();
+            for(String s:cont){
+                Move mv = new Move(s, tmp.getSideToMove());
+                curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getFrom())));
+                curMv.append(mv.getFrom().toString());
+                curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getTo())));
+                curMv.append(mv.getTo().toString());
+                if(tmp.isMated()) {
+                    curMv.append("#");
+                }else if(tmp.isKingAttacked()){
+                    curMv.append("+");
+                }
+                try {
+                    tmp.doMove(mv);
+                }catch (Exception ex){
+                    return "Err";
+                }
+                curMv.append(' ');
+            }
+            if(curMv.length()>0)
+                curMv.deleteCharAt(curMv.length()-1);
+            nice = curMv.toString();
+            return nice;
+        }
     }
     HashMap<String, analitem> cur_hash = new HashMap<>();
 
@@ -282,8 +313,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     anCnt++;
                     if(anCnt == 1) {
-                        uci2.clearOutput();
-                        return; // зделать нормальный timeout для очистки старых ходов либо проверку корректности хода.
+                        //uci2.clearOutput();
+                        //return; // зделать нормальный timeout для очистки старых ходов либо проверку корректности хода.
                     }
 
                     int cnt = 0;
@@ -296,7 +327,6 @@ public class MainActivity extends AppCompatActivity {
                         if(!pp.equals("info"))
                             continue;
                         analitem item = new analitem();
-                        item.cont = new String();
                         boolean nextpv = false;
                         String first = null;
                         while(true){
@@ -307,11 +337,31 @@ public class MainActivity extends AppCompatActivity {
                                 if(first == null) {
                                     //if(!tmpBoard.isMoveLegal(cur, false))
                                       //  break;
+                                    Move mv = new Move(cur, tmpBoard.getSideToMove());
+                                    Piece pc = tmpBoard.getPiece(mv.getFrom());
+                                    if(pc == Piece.NONE)
+                                        break;
+                                    if(tmpBoard.getSideToMove() == Side.WHITE) {
+                                        if (pc == Piece.BLACK_BISHOP || pc == Piece.BLACK_KING || pc == Piece.BLACK_PAWN || pc == Piece.BLACK_ROOK
+                                                || pc == Piece.BLACK_KNIGHT || pc == Piece.BLACK_QUEEN)
+                                            break;
+                                    }else{
+                                        if (pc == Piece.WHITE_BISHOP || pc == Piece.WHITE_KING || pc == Piece.WHITE_PAWN || pc == Piece.WHITE_ROOK
+                                                || pc == Piece.WHITE_KNIGHT || pc == Piece.WHITE_QUEEN)
+                                            break;
+                                    }
+
+                                    try {
+                                        if (!tmpBoard.isMoveLegal(mv, false))
+                                            break;
+                                    }
+                                    catch (Exception ex){
+                                        break;
+                                    }
                                     first = cur;
                                 }
-                                item.cont += " ";
-                                item.cont += cur;
-                                if(item.cont.length() >= 30)
+                                item.cont.add(cur);
+                                if(item.cont.size() >= 4)
                                     break;
                                 continue;
                             }
@@ -319,8 +369,10 @@ public class MainActivity extends AppCompatActivity {
                                 cur = a.getNext();
                                 if (cur == null)
                                     break;
-                                item.mateIn = -Integer.parseInt(cur);
-                                item.cp = 100000 * item.mateIn;
+                                item.mateIn = Integer.parseInt(cur);
+                                if(tmpBoard.getSideToMove() == Side.BLACK)
+                                    item.mateIn =-item.mateIn;
+                                item.cp = 10000000 * Integer.signum(item.mateIn) - item.mateIn;
                                 continue;
                             }
                             if(cur.equals("cp")) {
@@ -374,10 +426,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                         double dcp = ((double)cur.cp)/100.0;
                         if(myMove != null && cur.move.equals(myMove.toString())){
-                            curAnal.add(String.format("(%d) %s %s", cur.number, cpres, cur.cont));
+                            curAnal.add(String.format("(%d) %s %s", cur.number, cpres, cur.NiceCont(tmpBoard)));
                         }
-                        if (curAnal.size() < 5 ) {
-                            curAnal.add(String.format("%s %s", cpres, cur.cont));
+                        else if (curAnal.size() < 5 ) {
+                            curAnal.add(String.format("%s %s", cpres, cur.NiceCont(tmpBoard)));
                         }
                     }
                     //uci2.clearOutput(); // можем удалить те, которые еще не прочитали, но пофиг.
@@ -700,6 +752,7 @@ public class MainActivity extends AppCompatActivity {
         Piece pieceTo = Piece.NONE;
         //String fen;
         boolean isCheck = false;
+        boolean endgame;
     }
 
     private List<EntryProcess> getHistory(){
@@ -730,6 +783,10 @@ public class MainActivity extends AppCompatActivity {
                 entry.pieceTo = st.board.getPiece(parseSquare(st.curMove.substring(2, 4)));
             }
             moveToPrint.add(entry);
+        }else{
+            EntryProcess entry = new EntryProcess();
+            entry.endgame = true;
+            moveToPrint.add(entry);
         }
         return moveToPrint;
     }
@@ -741,7 +798,6 @@ public class MainActivity extends AppCompatActivity {
         boolean isWhite = true;
 
         List<EntryProcess> moveToPrint = getHistory();
-
         if(st.seldelt > moveToPrint.size()-1)
             st.seldelt = moveToPrint.size()-1;
         else if(st.seldelt < 0)
@@ -754,6 +810,29 @@ public class MainActivity extends AppCompatActivity {
             boolean isLastEntry = i == moveToPrint.size() - 1;
 
             EntryProcess entry = moveToPrint.get(i);
+
+            if(entry.endgame) {
+                String endString = "err";
+                if (st.lastGameState == GameState.Win) {
+                    endString = String.format("%s win", st.board.getSideToMove() == Side.WHITE ? "Black" : "White");
+                } else if (st.lastGameState == GameState.Draw) {
+                    String reason = "3 fold rep";
+                    if (st.board.isStaleMate())
+                        reason = "stalemate";
+                    else if (st.board.isInsufficientMaterial())
+                        reason = "insuficient material";
+                    else if (st.board.getHalfMoveCounter() >= 100)
+                        reason = "50th move rule";
+                    endString = String.format("Draw: %s", reason);
+                }
+
+                DisplayMoveItem item = new DisplayMoveItem();
+                lstMoves.add(item);
+                item.simpleString = endString;
+                item.issel = i == sel;
+                break;
+            }
+
             String moveString = entry.moveStr;
 
 
@@ -784,6 +863,9 @@ public class MainActivity extends AppCompatActivity {
                     curMv.append("+");
             }
 
+
+
+
             boolean isSelected = i == sel;
 
             if (isWhite) {
@@ -811,24 +893,7 @@ public class MainActivity extends AppCompatActivity {
             lstMoveItemsDisplay.add((item));
         }
 
-        String endString = null;
-        if (st.lastGameState == GameState.Win) {
-            endString = String.format("%s win", st.board.getSideToMove() == Side.WHITE ? "Black" : "White");
-        } else if (st.lastGameState == GameState.Draw) {
-            String reason = "3 fold rep";
-            if (st.board.isStaleMate())
-                reason = "stalemate";
-            else if (st.board.isInsufficientMaterial())
-                reason = "insuficient material";
-            else if (st.board.getHalfMoveCounter() >= 100)
-                reason = "50th move rule";
-            endString = String.format("Draw: %s", reason);
-        }
-        if (endString != null) {
-            DisplayMoveItem item = new DisplayMoveItem();
-            item.simpleString = endString;
-            lstMoveItemsDisplay.add((item));
-        }
+
         mAdapter.setLst(lstMoveItemsDisplay);
         mAdapter.notifyDataSetChanged();
 
