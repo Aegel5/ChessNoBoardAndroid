@@ -218,19 +218,22 @@ public class MainActivity extends AppCompatActivity {
             for(String s:cont){
                 Move mv = new Move(s, tmp.getSideToMove());
                 curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getFrom())));
-                curMv.append(mv.getFrom().toString());
+                curMv.append(s.substring(0, 2));
                 curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getTo())));
-                curMv.append(mv.getTo().toString());
-                if(tmp.isMated()) {
-                    curMv.append("#");
-                }else if(tmp.isKingAttacked()){
-                    curMv.append("+");
-                }
+                curMv.append(s.substring(2, 4));
+
                 try {
                     tmp.doMove(mv);
                 }catch (Exception ex){
                     return "Err";
                 }
+
+                if(tmp.isMated()) {
+                    curMv.append("#");
+                }else if(tmp.isKingAttacked()){
+                    curMv.append("+");
+                }
+
                 curMv.append(' ');
             }
             if(curMv.length()>0)
@@ -380,6 +383,8 @@ public class MainActivity extends AppCompatActivity {
                                 if (cur == null)
                                     break;
                                 item.cp = Integer.parseInt(cur);
+                                if(tmpBoard.getSideToMove() == Side.BLACK)
+                                    item.cp =-item.cp;
                                 continue;
                             }
                             if(cur.equals("pv")){
@@ -452,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         Log.d(TAG, "onPause");
         super.onPause();
-
+        // todo del  analizer
         if (st == null)
             return;
 
@@ -650,6 +655,7 @@ public class MainActivity extends AppCompatActivity {
 
             st.board = new Board();
             st.lastGameState = GameState.InProcess;
+            curAnal.clear();
 
             updateCompOnButtonText();
             updateGui();
@@ -752,6 +758,7 @@ public class MainActivity extends AppCompatActivity {
         Piece pieceTo = Piece.NONE;
         //String fen;
         boolean isCheck = false;
+        boolean isMate = false;
         boolean endgame;
     }
 
@@ -768,7 +775,10 @@ public class MainActivity extends AppCompatActivity {
             //entry.fen = tmpBoard.getFen();
             if (tmpBoard.isKingAttacked()) {
                 entry.isCheck = true;
+            }else if(tmpBoard.isMated()){
+                entry.isMate = true;
             }
+
             moveToPrint.add(entry);
         }
 
@@ -856,15 +866,12 @@ public class MainActivity extends AppCompatActivity {
             }
             if (moveString.length() > 2)
                 curMv.append(moveString.substring(2, moveString.length()));
+
             if (entry.isCheck) {
-                if (isLastEntry && st.lastGameState == GameState.Win)
-                    curMv.append("#");
-                else
-                    curMv.append("+");
+                curMv.append("+");
+            }else if(entry.isMate) {
+                curMv.append("#");
             }
-
-
-
 
             boolean isSelected = i == sel;
 
@@ -877,6 +884,14 @@ public class MainActivity extends AppCompatActivity {
                 curItem.blackSel = isSelected;
             }
 
+            if(isSelected) {
+                for (String s : curAnal) {
+                    DisplayMoveItem item = new DisplayMoveItem();
+                    item.simpleString = s;
+                    lstMoves.add((item));
+                }
+            }
+
             isWhite = !isWhite;
         }
 
@@ -887,11 +902,7 @@ public class MainActivity extends AppCompatActivity {
     private void printAllMoves_int(boolean fShowFigures) {
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
-        for (String s : curAnal) {
-            DisplayMoveItem item = new DisplayMoveItem();
-            item.simpleString = s;
-            lstMoveItemsDisplay.add((item));
-        }
+
 
 
         mAdapter.setLst(lstMoveItemsDisplay);
