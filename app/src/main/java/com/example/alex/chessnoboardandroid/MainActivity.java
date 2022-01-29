@@ -433,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
                         if(myMove != null && cur.move.equals(myMove.toString())){
                             curAnal.add(String.format("(%d) %s %s", cur.number, cpres, cur.NiceCont(tmpBoard)));
                         }
-                        else if (curAnal.size() < 5 ) {
+                        else if (curAnal.size() < 10 ) {
                             curAnal.add(String.format("%s %s", cpres, cur.NiceCont(tmpBoard)));
                         }
                     }
@@ -773,10 +773,10 @@ public class MainActivity extends AppCompatActivity {
             entry.piece = moveBackup.getMovingPiece();
             entry.pieceTo = moveBackup.getCapturedPiece();
             //entry.fen = tmpBoard.getFen();
-            if (tmpBoard.isKingAttacked()) {
-                entry.isCheck = true;
-            }else if(tmpBoard.isMated()){
+            if(tmpBoard.isMated()){
                 entry.isMate = true;
+            }else if (tmpBoard.isKingAttacked()) {
+                entry.isCheck = true;
             }
 
             moveToPrint.add(entry);
