@@ -1,6 +1,7 @@
 package com.example.alex.chessnoboardandroid;
 
 public class UciMove {
+    public double rnd;
     private String move;
     private int score = Integer.MIN_VALUE;
 

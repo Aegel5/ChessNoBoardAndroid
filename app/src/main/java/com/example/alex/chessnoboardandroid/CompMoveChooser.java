@@ -7,8 +7,10 @@ import com.github.bhlangonijr.chesslib.MoveBackup;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,6 +72,12 @@ public class CompMoveChooser {
         return strickDeltaScore(level);
     }
 
+    static double  dist(String s1, String s2){
+        double x = (s1.charAt(0) - 'a') - (s2.charAt(0) - 'a');
+        double y = (s1.charAt(1) - '1') - (s2.charAt(1) - '1');
+        return Math.sqrt(x*x+y*y);
+    }
+
     public static Move DoMoveChoose(
             String lineBestMove,
             GameData st,
@@ -104,7 +112,15 @@ public class CompMoveChooser {
 
             int previusScore = Integer.MAX_VALUE;
             LinkedList<MoveBackup> backup = st.board.getBackup();
+            Move prevComp = null;
             if (!backup.isEmpty()) {
+
+                if(backup.size()>= 2){
+                    Iterator lit = backup.descendingIterator();
+                    lit.next();
+                    prevComp = ((MoveBackup)lit.next()).getMove();
+                }
+
                 Move mv = backup.getLast().getMove();
                 st.board.undoMove();
                 String fen = st.board.getFen();
@@ -136,7 +152,48 @@ public class CompMoveChooser {
             if (possibleMoves.isEmpty())
                 throw new RuntimeException("possible moves empty");
 
-            UciMove moveUci = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1));
+            String prevto = null;
+            if(prevComp != null){
+                prevto = prevComp.getTo().value().toLowerCase();
+            }
+
+            // todo probability by distance from prev move. prev-to <-> cur-from
+            // в таком случае фигура которой ходили в предыдущий раз (если такая есть в этой выборке, получит мак значение)
+            // weight = 20 - dist
+            for(UciMove m:possibleMoves){
+                m.rnd = 20;
+                if(prevto != null){
+                    double dist = dist(prevto, m.getMove().substring(0,2));
+                    m.rnd -= dist;
+                }
+            }
+
+            double sumd = 0;
+            for(UciMove m:possibleMoves){
+                sumd+=m.rnd;
+            }
+
+            double r = MainApp.rand().nextDouble();
+            r *= sumd;
+
+            double cursum = 0;
+            UciMove moveUci = null;
+            for(UciMove m:possibleMoves){
+                cursum += m.rnd;
+                if(r <= cursum) {
+                    moveUci = m;
+                    break;
+                }
+
+            }
+
+            if(moveUci == null){
+                moveUci = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1)); // fallback
+            }
+
+
+
+            //UciMove moveUci = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1));
             moveTodo = ChessLibWrapper.moveFromString(moveUci.getMove(), st.board);
 
 //                if (isMoveLegal(moveTodo, false) != MoveLegalResult.AllOk) {
