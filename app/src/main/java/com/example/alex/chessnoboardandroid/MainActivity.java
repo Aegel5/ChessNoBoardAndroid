@@ -215,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
             Board tmp = new Board();
             tmp.loadFromFen(brd.getFen());
             StringBuilder curMv = new StringBuilder();
+            //curMv.append("• ");
             for(String s:cont){
                 Move mv = new Move(s, tmp.getSideToMove());
                 curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getFrom())));
@@ -888,7 +889,7 @@ public class MainActivity extends AppCompatActivity {
                 curItem.blackSel = isSelected;
             }
 
-            if(isSelected) {
+            if(isSelected && st.seldelt > 0) {
                 for (String s : curAnal) {
                     DisplayMoveItem item = new DisplayMoveItem();
                     item.simpleString = s;
