@@ -438,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     //uci2.clearOutput(); // можем удалить те, которые еще не прочитали, но пофиг.
-                    printAllMoves();
+                    printAllMoves_noscr();
                 }
             }
         } catch (Exception e) {
@@ -749,7 +749,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void printAllMoves() {
-        printAllMoves_int(st.parm.isAddFiguresSign());
+        printAllMoves_int(st.parm.isAddFiguresSign(), true);
+    }
+
+    private void printAllMoves_noscr() {
+        printAllMoves_int(st.parm.isAddFiguresSign(), false);
     }
 
     class EntryProcess {
@@ -899,7 +903,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void printAllMoves_int(boolean fShowFigures) {
+    private void printAllMoves_int(boolean fShowFigures, boolean scroll) {
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
 
@@ -908,13 +912,15 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.setLst(lstMoveItemsDisplay);
         mAdapter.notifyDataSetChanged();
 
-        mRecyclerView.post(new Runnable() {
-            @Override
-            public void run() {
-                // Call smooth scroll
-                mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount() - 1);
-            }
-        });
+        if(scroll) {
+            mRecyclerView.post(new Runnable() {
+                @Override
+                public void run() {
+                    // Call smooth scroll
+                    mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount() - 1);
+                }
+            });
+        }
 
     }
 
@@ -993,7 +999,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         curAnal.clear();
         st.seldelt++;
-        updateGui();
+        printAllMoves_noscr();
     }
 
     public void onRight(View view) {
@@ -1001,7 +1007,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         curAnal.clear();
         st.seldelt--;
-        updateGui();
+        printAllMoves_noscr();
 
     }
 
