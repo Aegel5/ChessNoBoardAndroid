@@ -123,7 +123,7 @@
                 android:textOn="on(0)" />
 
             <Button
-                android:id="@+id/btnBoard"
+                android:id="@+id/btnLeft"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -131,7 +131,7 @@
                 android:text="◀" />
 
             <Button
-                android:id="@+id/btnBoard2"
+                android:id="@+id/btnRight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

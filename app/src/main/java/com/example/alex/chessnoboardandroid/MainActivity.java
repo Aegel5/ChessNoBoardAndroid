@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.TreeMap;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -50,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private UCIWrapper uci2 = new UCIWrapper();
     private Button[] buttonsLetters = null;
     private ToggleButton btnIsCompEnabled = null;
-    private BoardViewListener boardViewListener;
+
     private Button btnShowBoard;
     private PopupWindow popupWindowBoard;
     private TextView boardView;
@@ -67,34 +66,6 @@ public class MainActivity extends AppCompatActivity {
     private List<DisplayMoveItem> lstMoveItemsDisplay = new ArrayList<>();
 
 
-
-    /*
-    Коллбек для показа доски
-     */
-    private class BoardViewListener implements View.OnTouchListener {
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            if (st.parm.getAllowViewBoardMode() == AllowViewBoardMode.None)
-                return false;
-            boolean allowShowBoard = st.parm.getAllowViewBoardMode().getIndex() >= AllowViewBoardMode.AllowViewTextBoard.getIndex();
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    if (allowShowBoard) {
-                        showBoardPopup();
-                    }
-                    break;
-                case MotionEvent.ACTION_UP: // отпускание
-                case MotionEvent.ACTION_CANCEL:
-                    if (popupWindowBoard != null) {
-                        popupWindowBoard.dismiss();
-                    }
-                    break;
-            }
-            return true;
-        }
-    }
-
     private void fillButtonsLetter() {
         buttonsLetters = new Button[8];
         buttonsLetters[0] = findViewById(R.id.l1);
@@ -105,19 +76,6 @@ public class MainActivity extends AppCompatActivity {
         buttonsLetters[5] = findViewById(R.id.l6);
         buttonsLetters[6] = findViewById(R.id.l7);
         buttonsLetters[7] = findViewById(R.id.l8);
-    }
-
-    private void initPopup() {
-
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        View popupView = inflater.inflate(R.layout.layout_board, null);
-
-        // create the popup window
-        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-        boolean focusable = true; // lets taps outside the popup also dismiss it
-        popupWindowBoard = new PopupWindow(popupView, width, height, focusable);
-        boardView = popupView.findViewById(R.id.boardView);
     }
 
 
@@ -137,26 +95,6 @@ public class MainActivity extends AppCompatActivity {
         return "";
     }
 
-    private void showBoardPopup() {
-        try {
-            Log.d(TAG, "showBoardPopup");
-
-            String boardStr = st.board.toString();
-            String text = boardStr.substring(0, boardStr.indexOf("Side:") - 1);
-            StringBuilder result = new StringBuilder();
-            for (char c : text.toCharArray()) {
-                if (c == ' ') result.append('.');
-                else result.append(c);
-            }
-
-            boardView.setText(result.toString());
-            popupWindowBoard.showAtLocation(btnShowBoard, Gravity.CENTER, 0, 0);
-
-        } catch (Exception e) {
-            Log.d(TAG, "Exception showBoardPopup: " + e.toString());
-        }
-    }
-
     public void doMove(String move) {
         st.board.doMove(new Move(move, st.board.getSideToMove()));
     }
@@ -171,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
         try {
 
-            initPopup();
+            //initPopup();
             initUci();
             initGui();
 
@@ -525,12 +463,24 @@ public class MainActivity extends AppCompatActivity {
                 updateGui();
             }
         });
-        btnShowBoard = findViewById(R.id.btnBoard);
-        boardViewListener = new BoardViewListener();
-        btnShowBoard.setOnTouchListener(boardViewListener);
+
 
         (findViewById(R.id.btnBS)).setOnLongClickListener(v -> {
             revertMove();
+            return true;
+        });
+
+        (findViewById(R.id.btnLeft)).setOnLongClickListener(v -> {
+            st.seldelt = 99999;
+            printAllMoves_noscr();
+            scr_up();
+            return true;
+        });
+
+        (findViewById(R.id.btnRight)).setOnLongClickListener(v -> {
+            st.seldelt = 0;
+            printAllMoves_noscr();
+            scr_end();
             return true;
         });
 
@@ -904,6 +854,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    void scr_end(){
+        mRecyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                // Call smooth scroll
+                mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount() - 1);
+            }
+        });
+    }
+
+    void scr_up(){
+        mRecyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                // Call smooth scroll
+                mRecyclerView.smoothScrollToPosition(0);
+            }
+        });
+    }
+
     private void printAllMoves_int(boolean fShowFigures, boolean scroll) {
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
@@ -914,13 +884,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.notifyDataSetChanged();
 
         if(scroll) {
-            mRecyclerView.post(new Runnable() {
-                @Override
-                public void run() {
-                    // Call smooth scroll
-                    mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount() - 1);
-                }
-            });
+            scr_end();
         }
 
     }
