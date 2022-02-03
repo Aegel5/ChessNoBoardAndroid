@@ -33,7 +33,7 @@ public class NewGameParams {
     // Можно ли подсматривать на доску
     private AllowViewBoardMode allowViewBoardMode = AllowViewBoardMode.None;
 
-    private int compStrength = 10;
+    private int compStrength = 3;
 
     private boolean addFiguresSign = true;
 

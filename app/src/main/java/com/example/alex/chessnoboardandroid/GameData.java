@@ -12,7 +12,7 @@ import java.util.TreeMap;
     Данные игры которые сериализуются при паузе
 */
 class GameData {
-    public NewGameParams parm;
+    public NewGameParams parm = new NewGameParams();
     public String curMove = "";
     public Map<String, Integer> scoreCache = new TreeMap<>();
     public GameState lastGameState;
