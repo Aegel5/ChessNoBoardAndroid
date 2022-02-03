@@ -61,27 +61,36 @@ class DataAdapterMoves extends RecyclerView.Adapter<DataAdapterMoves.ViewHolder>
         return 0;
     }
 
+    String addbr (String str, boolean sel) {
+        return sel ? String.format("[%s]", str) : str;
+    };
+
     @Override
     public void onBindViewHolder(DataAdapterMoves.ViewHolder holder, int position) {
         DisplayMoveItem phone = phones.get(position);
 
+
+
         if(holder.simpleString != null) {
-            holder.simpleString.setText(phone.simpleString);
-            holder.simpleString.setTypeface(phone.issel ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            holder.simpleString.setText(addbr(phone.simpleString, phone.issel));
+            //holder.simpleString.setText(phone.simpleString);
+            //holder.simpleString.setTypeface(phone.issel ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
         }
         else {
 
             holder.tv1.setText(String.format("%s.", phone.moveNum));
-            holder.tv2.setText(phone.whiteMove);
-            holder.tv3.setText(phone.blackMove);
-            if(phone.whiteSel)
-                holder.tv2.setTypeface(Typeface.DEFAULT_BOLD);
-            else
-                holder.tv2.setTypeface(Typeface.DEFAULT);
-            if(phone.blackSel)
-                holder.tv3.setTypeface(Typeface.DEFAULT_BOLD);
-            else
-                holder.tv3.setTypeface(Typeface.DEFAULT);
+            holder.tv2.setText(addbr(phone.whiteMove, phone.whiteSel));
+            holder.tv3.setText(addbr(phone.blackMove, phone.blackSel));
+//            holder.tv2.setText(phone.whiteMove);
+//            holder.tv3.setText(phone.blackMove);
+//            if(phone.whiteSel)
+//                holder.tv2.setTypeface(Typeface.DEFAULT_BOLD);
+//            else
+//                holder.tv2.setTypeface(Typeface.DEFAULT);
+//            if(phone.blackSel)
+//                holder.tv3.setTypeface(Typeface.DEFAULT_BOLD);
+//            else
+//                holder.tv3.setTypeface(Typeface.DEFAULT);
         }
     }
 

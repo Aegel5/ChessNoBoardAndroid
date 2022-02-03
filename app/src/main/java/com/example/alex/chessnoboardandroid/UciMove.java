@@ -40,20 +40,23 @@ public class UciMove {
 
     // score с учетом мата в n ходов
     public int getUniversalScore() {
+
+        var absMate = Math.abs(mateIn);
+
         if (mateIn == 0) {
             if (score == Integer.MIN_VALUE)
                 throw new RuntimeException("bad state");
             return score;
         }
-        else if (mateIn == 1)
-            return 1600; // 16 пешек
-        else if (mateIn == 2)
-            return 1200;
-        else if (mateIn == 3)
-            return 800;
-        else
-            return 700;
 
+        else if (absMate == 1)
+            return mateIn * 900; // приравнивается к чистому ферзю.
+        else if (absMate == 2)
+            return mateIn * 700;
+        else if(absMate == 3)
+            return mateIn * 600;
+        else
+            return mateIn * 500;
     }
 }
 
