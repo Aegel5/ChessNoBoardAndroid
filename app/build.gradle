@@ -1,11 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
+//    packagingOptions {
+//        jniLibs {
+//            useLegacyPackaging true
+//        }
+//    }
     compileSdkVersion 30
     defaultConfig {
         applicationId "com.example.alex.chessnoboardandroid"
         minSdkVersion 25
-        targetSdkVersion 30
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

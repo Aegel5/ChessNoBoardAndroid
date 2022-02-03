@@ -517,24 +517,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void initUci() {
         try {
-//            boolean found_x86 = false;
-//            for (String item : Build.SUPPORTED_32_BIT_ABIS) {
-//                if (item.indexOf("x86") != -1) {
-//                    found_x86 = true;
-//                }
-//                Log.d(TAG, item);
-//            }
-//            String stockFileName = "stockfish_exe_arm7";
-//
-//            if (found_x86)
-//                stockFileName = "stockfish_exe_x86";
-//            String path = Utils.unzipExeFromAsset(stockFileName, this);
+            boolean found_x86 = false;
+            for (String item : Build.SUPPORTED_32_BIT_ABIS) {
+                if (item.indexOf("x86") != -1) {
+                    found_x86 = true;
+                }
+                Log.d(TAG, item);
+            }
+            String stockFileName = "stockfish_exe_arm7";
 
-            var path = getApplicationInfo().nativeLibraryDir + "/stockfish.so";
+            if (found_x86)
+                stockFileName = "stockfish_exe_x86";
+            String path = Utils.unzipExeFromAsset(stockFileName, this);
+
+            //var path = getApplicationInfo().nativeLibraryDir + "/stockfish.so";
 
             uci.init(path);
-
-            //uci.init(path);
             uci2.init(path);
 
             // показываем 50 возможных ходов и их score
