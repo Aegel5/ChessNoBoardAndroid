@@ -161,6 +161,10 @@ public class MainActivity extends AppCompatActivity {
                 curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getTo())));
                 curMv.append(s.substring(2, 4));
 
+                if(s.length() > 4){
+                    curMv.append(s.charAt(4)); // promotion
+                }
+
                 try {
                     tmp.doMove(mv);
                 }catch (Exception ex){

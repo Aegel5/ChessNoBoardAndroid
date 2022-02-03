@@ -50,7 +50,7 @@ public class UciMove {
         }
 
         else if (absMate == 1)
-            return mateIn * 900; // приравнивается к чистому ферзю.
+            return mateIn * 900; // приравнивается к чистому ферзю. todo конем считать меньше (типо труднее заметить)
         else if (absMate == 2)
             return mateIn * 700;
         else if(absMate == 3)
