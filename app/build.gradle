@@ -32,6 +32,8 @@ android {
     }
     productFlavors {
     }
+    //buildToolsVersion '30.0.3'
+    buildToolsVersion '28.0.3'
 }
 
 repositories {
