@@ -5,7 +5,7 @@ android {
     defaultConfig {
         applicationId "com.example.alex.chessnoboardandroid"
         minSdkVersion 25
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -17,6 +17,7 @@ android {
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -33,7 +34,7 @@ android {
     productFlavors {
     }
     //buildToolsVersion '30.0.3'
-    buildToolsVersion '28.0.3'
+    //buildToolsVersion '28.0.3'
 }
 
 repositories {
