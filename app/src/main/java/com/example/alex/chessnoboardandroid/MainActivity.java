@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
                                     first = cur;
                                 }
                                 item.cont.add(cur);
-                                if(item.cont.size() >= 7)
+                                if(item.cont.size() >= 8)
                                     break;
                                 continue;
                             }
