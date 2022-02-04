@@ -123,44 +123,7 @@ public class MainActivity extends AppCompatActivity {
     String curFen;
     int anCnt;
 
-    class analitem{
-        public String move;
-        public Integer cp;
-        public List<String> cont = new ArrayList<>();
-        public  int number;
-        public  int mateIn;
-        String nice;
 
-        public String NiceCont(Board brd){
-
-            if(nice != null)
-                return nice;
-
-            Board tmp = new Board();
-            tmp.loadFromFen(brd.getFen());
-            StringBuilder curMv = new StringBuilder();
-            //curMv.append("• ");
-            for(String s:cont){
-
-                curMv.append(Utils.PretifyMove(s, tmp));
-                curMv.append(' ');
-
-                try {
-                    Move mv = new Move(s, tmp.getSideToMove());
-                    tmp.doMove(mv);
-                }catch (Exception ex){
-                    curMv.append("Err");
-                    return curMv.toString();
-                }
-            }
-
-            if(curMv.length()>0)
-                curMv.deleteCharAt(curMv.length()-1);
-            nice = curMv.toString();
-
-            return nice;
-        }
-    }
     HashMap<String, analitem> cur_hash = new HashMap<>();
 
     void stop2(){
@@ -244,76 +207,14 @@ public class MainActivity extends AppCompatActivity {
                     List<String> ln = uci2.takeList();
                     for (int i = 0; i < ln.size(); i++) { // маленькая вероятно, но все же могут параллельно добавиться, но нам пофиг, но используем индекс.
                         String s = ln.get(i);
-                        SimpleTokScanner a = new SimpleTokScanner(s);
-                        String pp = a.getNext();
-                        if(!pp.equals("info"))
-                            continue;
                         analitem item = new analitem();
-                        boolean nextpv = false;
-                        String first = null;
-                        while(true){
-                            String cur = a.getNext();
-                            if(cur == null)
-                                break;
-                            if(nextpv){
-                                if(first == null) {
-                                    //if(!tmpBoard.isMoveLegal(cur, false))
-                                      //  break;
-                                    Move mv = new Move(cur, tmpBoard.getSideToMove());
-                                    Piece pc = tmpBoard.getPiece(mv.getFrom());
-                                    if(pc == Piece.NONE)
-                                        break;
-                                    if(tmpBoard.getSideToMove() == Side.WHITE) {
-                                        if (pc == Piece.BLACK_BISHOP || pc == Piece.BLACK_KING || pc == Piece.BLACK_PAWN || pc == Piece.BLACK_ROOK
-                                                || pc == Piece.BLACK_KNIGHT || pc == Piece.BLACK_QUEEN)
-                                            break;
-                                    }else{
-                                        if (pc == Piece.WHITE_BISHOP || pc == Piece.WHITE_KING || pc == Piece.WHITE_PAWN || pc == Piece.WHITE_ROOK
-                                                || pc == Piece.WHITE_KNIGHT || pc == Piece.WHITE_QUEEN)
-                                            break;
-                                    }
-
-                                    try {
-                                        if (!tmpBoard.isMoveLegal(mv, false))
-                                            break;
-                                    }
-                                    catch (Exception ex){
-                                        break;
-                                    }
-                                    first = cur;
-                                }
-                                item.cont.add(cur);
-                                if(item.cont.size() >= 8)
-                                    break;
-                                continue;
+                        item.Parse(s, tmpBoard, true);
+                        if(item.move != null){
+                            if(tmpBoard.getSideToMove() == Side.BLACK) {
+                                item.mateIn = -item.mateIn;
+                                item.cp = -item.cp;
                             }
-                            if(cur.equals("mate")){
-                                cur = a.getNext();
-                                if (cur == null)
-                                    break;
-                                item.mateIn = Integer.parseInt(cur);
-                                if(tmpBoard.getSideToMove() == Side.BLACK)
-                                    item.mateIn =-item.mateIn;
-                                item.cp = 10000000 * Integer.signum(item.mateIn) - item.mateIn;
-                                continue;
-                            }
-                            if(cur.equals("cp")) {
-                                cur = a.getNext();
-                                if (cur == null)
-                                    break;
-                                item.cp = Integer.parseInt(cur);
-                                if(tmpBoard.getSideToMove() == Side.BLACK)
-                                    item.cp =-item.cp;
-                                continue;
-                            }
-                            if(cur.equals("pv")){
-                                nextpv = true;
-                                continue;
-                            }
-                        }
-                        if(first != null){
-                            item.move = first;
-                            cur_hash.put(first, item);
+                            cur_hash.put(item.move, item);
                         }
                     }
 
@@ -604,8 +505,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doIntMove(Move move) {
-        st.board.doMove(move);
+    private void doIntMove(Move mv) {
+        st.board.doMove(mv);
         st.lastGameState = getGameState();
     }
 
@@ -651,7 +552,8 @@ public class MainActivity extends AppCompatActivity {
                 if (bestMoveLine != null) {
                     compMoveWaiter = null;
 
-                    doIntMove(CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci));
+                    var mv = CompMoveChooser.DoMoveChoose(bestMoveLine, st, uci);
+                    doIntMove(new Move(mv, st.board.getSideToMove()));
                     printAllMoves();
                 } else {
                     scheduleWait(10);
@@ -672,7 +574,7 @@ public class MainActivity extends AppCompatActivity {
             String fen = st.board.getFen();
             uci.send(String.format("position fen %s", fen));
             uci.clearOutput();
-            int timeToMove = 200;
+            int timeToMove = 300;
             uci.send(String.format("go movetime %d", timeToMove));
 
             compMoveWaiter = new CompMoveWaiter(timeToMove);

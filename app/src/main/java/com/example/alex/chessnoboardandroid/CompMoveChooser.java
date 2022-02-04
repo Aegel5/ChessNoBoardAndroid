@@ -4,9 +4,12 @@ import android.util.Log;
 
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.MoveBackup;
+import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -85,7 +88,28 @@ public class CompMoveChooser {
         return Math.sqrt(x*x+y*y);
     }
 
-    public static Move DoMoveChoose(
+    static int MateToCp(int mateIn){
+
+        var absMate = Math.abs(mateIn);
+        var sgn = Integer.signum(mateIn);
+
+        if (absMate == 1)
+            return sgn * 700; // приравнивается к чистому ферзю. todo конем считать меньше (типо труднее заметить)
+        if (absMate == 2)
+            return sgn * 600;
+        if(absMate == 3)
+            return sgn * 500;
+
+        return sgn * 400;
+    }
+
+    public static class CandidatMove {
+        public double rnd;
+        private String move;
+        public  int cp;
+    }
+
+    public static String DoMoveChoose(
             String lineBestMove,
             GameData st,
             UCIWrapper uci) {
@@ -100,136 +124,165 @@ public class CompMoveChooser {
         if (bestMoveString.length() < 4)
             throw new RuntimeException("bad move string: " + bestMoveString);
 
-        Move bestmove = ChessLibWrapper.moveFromString(bestMoveString, st.board);
+        if (st.parm.isMaxStrength()) {
+            return bestMoveString;
+        }
 
-        Move moveTodo = bestmove;
-        int moveScoreTodo = Integer.MIN_VALUE;
+        var lines = uci.curLines();
+        if (lines.isEmpty())
+            throw new RuntimeException("moves is empty, but best move exists");
 
-        if (!st.parm.isMaxStrength()) {
-            //boolean isWhite = board.getSideToMove() == Side.WHITE;
-            // получим все ходы компа.
-            List<UciMove> possibleMoves = new ArrayList<>();
-            Map<String, UciMove> allMoves = uci.getCurrentMovesScore();
-            if (allMoves.isEmpty())
-                throw new RuntimeException("moves is empty, buy best move exists");
-            int minDeltaScore = getMinDeltaScoreForLevel(st.parm.getCompStrength());
-            int bestScore = allMoves.get(bestMoveString).getUniversalScore();
+        var parsed = analitem.Parse(lines);
 
-            int minPossibleScore = bestScore - minDeltaScore;
+        Collections.sort(parsed, (u1, u2) -> u2.cp.compareTo(u1.cp));
 
-            int previusScore = Integer.MAX_VALUE;
-            LinkedList<MoveBackup> backup = st.board.getBackup();
-            Move prevComp = null;
-            if (!backup.isEmpty()) {
 
-                if(backup.size()>= 2){
-                    Iterator lit = backup.descendingIterator();
-                    lit.next();
-                    prevComp = ((MoveBackup)lit.next()).getMove();
-                }
-
-                Move mv = backup.getLast().getMove();
-                st.board.undoMove();
-                String fen = st.board.getFen();
-                st.board.doMove(mv);
-                //Log.d(TAG,"try find for fen "+ fen);
-                previusScore = st.scoreCache.getOrDefault(fen, previusScore);
-                if (previusScore != Integer.MAX_VALUE) {
-                    Log.d(TAG, "found previous score " + previusScore);
-                }
-            }
-
-            int origMinPossibleScore = minPossibleScore;
-            if (minPossibleScore > previusScore) {
-                // Пользователь зевнул, на низких уровнях не будем принимать его зевок
-                double total = minPossibleScore - previusScore;
-                double step = total / NewGameParams.getMaxLevel();
-                double addFor = step * st.parm.getCompStrength();
-                minPossibleScore = previusScore + (int) Math.round(addFor);
-                Log.d(TAG, String.format("уменьшаем minPossibleScore %d -> %d ", origMinPossibleScore, minPossibleScore));
-
-            }
-
-            Log.d(TAG, String.format("best score=%d, minpossiblescore=%d(%d), prevScore=%d",
-                    bestScore, minPossibleScore, origMinPossibleScore, previusScore));
-            for (UciMove move : allMoves.values()) {
-                if (move.getUniversalScore() >= minPossibleScore)
-                    possibleMoves.add(move);
-            }
-            if (possibleMoves.isEmpty())
-                throw new RuntimeException("possible moves empty");
-
-            String prevto = null;
-            if(prevComp != null){
-                prevto = prevComp.getTo().value().toLowerCase();
-            }
-
-            // todo probability by distance from prev move. prev-to <-> cur-from
-            // в таком случае фигура которой ходили в предыдущий раз (если такая есть в этой выборке, получит мак значение)
-            // weight = 20 - dist
-            for(UciMove m:possibleMoves){
-                m.rnd = 20;
-                if(prevto != null){
-                    double dist = dist(prevto, m.getMove().substring(0,2));
-                    m.rnd -= dist;
-                }
-            }
-
-            double sumd = 0;
-            for(UciMove m:possibleMoves){
-                sumd+=m.rnd;
-            }
-
-            double r = MainApp.rand().nextDouble();
-            r *= sumd;
-
-            double cursum = 0;
-            UciMove moveUci = null;
-            for(UciMove m:possibleMoves){
-                cursum += m.rnd;
-                if(r <= cursum) {
-                    moveUci = m;
+        int cntGet = 0;
+        int sumGet = 0;
+        for (var item : parsed) {
+            if(item.mateIn == 0) {
+                cntGet++;
+                sumGet += item.cp;
+                if(cntGet >= 10)
                     break;
-                }
+            }
+        }
 
+        // оценка позиции без учета мата - среднее 10 лучших ходов
+        int etalon = cntGet == 0 ? 0 : (int) ((double)sumGet / cntGet);
+
+        // пропатчим все матовые ходы согласно эталону
+        for (var item : parsed) {
+            if(item.mateIn != 0) {
+                item.cp = etalon + MateToCp(item.mateIn);
+            }
+        }
+
+        // снова сортируем
+        Collections.sort(parsed, (u1, u2) -> u2.cp.compareTo(u1.cp));
+
+        // Теперь у нас все готово для выбора хода
+
+        int minDeltaScore = getMinDeltaScoreForLevel(st.parm.getCompStrength());
+        int bestScore = parsed.get(0).cp;
+
+        int minPossibleScore = bestScore - minDeltaScore;
+
+        int previusScore = Integer.MAX_VALUE;
+        LinkedList<MoveBackup> backup = st.board.getBackup();
+        Move prevComp = null;
+        if (!backup.isEmpty()) {
+
+            if (backup.size() >= 2) {
+                Iterator lit = backup.descendingIterator();
+                lit.next();
+                prevComp = ((MoveBackup) lit.next()).getMove();
             }
 
-            if(moveUci == null){
-                moveUci = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1)); // fallback
+            Move mv = backup.getLast().getMove();
+            st.board.undoMove(); // откатываем ход пользователя
+            String fen = st.board.getFen();
+            st.board.doMove(mv);
+            //Log.d(TAG,"try find for fen "+ fen);
+            previusScore = st.scoreCache.getOrDefault(fen, previusScore);
+            if (previusScore != Integer.MAX_VALUE) {
+                Log.d(TAG, "found previous score " + previusScore);
             }
+        }
 
-
-
-            //UciMove moveUci = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1));
-            moveTodo = ChessLibWrapper.moveFromString(moveUci.getMove(), st.board);
-
-//                if (isMoveLegal(moveTodo, false) != MoveLegalResult.AllOk) {
-//                    throw new RuntimeException("comp move not legal " + moveUci.move);
-//                }
-
-            StringBuilder allmv = new StringBuilder();
-            for (int i = 0; i < possibleMoves.size(); i++) {
-                allmv.append(possibleMoves.get(i).getMove());
-                if (i != possibleMoves.size() - 1)
-                    allmv.append(",");
-            }
-            moveScoreTodo = moveUci.getUniversalScore();
-            Log.d(TAG, String.format("side=%s, choose move=%s(%d) from %d(%s)(all=%d), bestmove=%s(%d), level=%d",
-                    st.board.getSideToMove().toString(),
-                    moveUci.getMove(), moveUci.getUniversalScore(),
-                    possibleMoves.size(), allmv.toString(), allMoves.size(),
-                    bestMoveString, bestScore, st.parm.getCompStrength()));
+        int origMinPossibleScore = minPossibleScore;
+        if (minPossibleScore > previusScore) {
+            // Пользователь зевнул, на низких уровнях не будем принимать его зевок
+            double total = minPossibleScore - previusScore;
+            double step = total / NewGameParams.getMaxLevel();
+            double addFor = step * st.parm.getCompStrength();
+            minPossibleScore = previusScore + (int) Math.round(addFor);
+            Log.d(TAG, String.format("уменьшаем minPossibleScore %d -> %d ", origMinPossibleScore, minPossibleScore));
 
         }
+
+        Log.d(TAG, String.format("best score=%d, minpossiblescore=%d(%d), prevScore=%d",
+                bestScore, minPossibleScore, origMinPossibleScore, previusScore));
+
+        List<CandidatMove> possibleMoves = new ArrayList<>();
+
+        for (var item : parsed) {
+            if (item.cp >= minPossibleScore) {
+                CandidatMove mv = new CandidatMove();
+                mv.move = item.move;
+                mv.cp = item.cp;
+                possibleMoves.add(mv);
+            }
+            else
+                break; // sorted
+        }
+
+        if (possibleMoves.isEmpty())
+            throw new RuntimeException("possible moves empty");
+
+        String prevto = null;
+        if (prevComp != null) {
+            prevto = prevComp.getTo().value().toLowerCase();
+        }
+
+        // todo probability by distance from prev move. prev-to <-> cur-from
+        // в таком случае фигура которой ходили в предыдущий раз (если такая есть в этой выборке, получит мак значение)
+        // weight = 20 - dist
+        for (var m : possibleMoves) {
+            m.rnd = 20;
+            if (prevto != null) {
+                double dist = dist(prevto, m.move.substring(0, 2));
+                m.rnd -= dist;
+            }
+        }
+
+        double sumd = 0;
+        for (var m : possibleMoves) {
+            sumd += m.rnd;
+        }
+
+        double r = MainApp.rand().nextDouble();
+        r *= sumd;
+
+        double cursum = 0;
+        CandidatMove candMv = null;
+        for (var m : possibleMoves) {
+            cursum += m.rnd;
+            if (r <= cursum) {
+                candMv = m;
+                break;
+            }
+
+        }
+
+        if (candMv == null) {
+            candMv = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1)); // fallback
+        }
+
+        StringBuilder allmv = new StringBuilder();
+        for (int i = 0; i < possibleMoves.size(); i++) {
+            allmv.append(possibleMoves.get(i).move);
+            if (i != possibleMoves.size() - 1)
+                allmv.append(",");
+        }
+
+        var moveScoreTodo = candMv.cp;
+        Log.d(TAG, String.format("side=%s, choose move=%s(%d) from %d(%s)(all=%d), bestmove=%s(%d), level=%d",
+                st.board.getSideToMove().toString(),
+                candMv.move, candMv.cp,
+                possibleMoves.size(), allmv.toString(), parsed.size(),
+                bestMoveString, bestScore, st.parm.getCompStrength()));
+
 
         // запомним best score для этой позиции
         if (moveScoreTodo != Integer.MIN_VALUE) {
+            st.board.doMove(new Move(candMv.move, st.board.getSideToMove()));
             st.scoreCache.put(st.board.getFen(), moveScoreTodo);
+            st.board.undoMove();
             //Log.d(TAG, "safe score for fen " + board.getFen());
         }
 
-        return moveTodo;
-
+        return candMv.move;
     }
 
 }
