@@ -29,12 +29,10 @@ class analitem{
         //curMv.append("• ");
         for(String s:cont){
 
-            curMv.append(Utils.PretifyMove(s, tmp));
-            curMv.append(' ');
 
             try {
-                Move mv = new Move(s, tmp.getSideToMove());
-                tmp.doMove(mv);
+                curMv.append(Utils.PretifyAndMove(s, tmp));
+                curMv.append(' ');
             }catch (Exception ex){
                 curMv.append("Err");
                 return curMv.toString();
@@ -65,16 +63,11 @@ class analitem{
                     if(tmpBoard != null) {
                         Move mv = new Move(cur, tmpBoard.getSideToMove());
                         Piece pc = tmpBoard.getPiece(mv.getFrom());
+
                         if (pc == Piece.NONE)
-                            return;
-                        if (tmpBoard.getSideToMove() == Side.WHITE) {
-                            if (pc == Piece.BLACK_BISHOP || pc == Piece.BLACK_KING || pc == Piece.BLACK_PAWN || pc == Piece.BLACK_ROOK
-                                    || pc == Piece.BLACK_KNIGHT || pc == Piece.BLACK_QUEEN)
-                                break;
-                        } else {
-                            if (pc == Piece.WHITE_BISHOP || pc == Piece.WHITE_KING || pc == Piece.WHITE_PAWN || pc == Piece.WHITE_ROOK
-                                    || pc == Piece.WHITE_KNIGHT || pc == Piece.WHITE_QUEEN)
-                                break;
+                            break;
+                        if (tmpBoard.getSideToMove() != pc.getPieceSide()) {
+                            break;
                         }
 
                         try {

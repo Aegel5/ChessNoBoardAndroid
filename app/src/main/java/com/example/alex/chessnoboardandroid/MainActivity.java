@@ -598,21 +598,23 @@ public class MainActivity extends AppCompatActivity {
         boolean endgame;
     }
 
-    private List<EntryProcess> getHistory(){
+    private List<EntryProcess> getHistory() {
 
         List<EntryProcess> moveToPrint = new ArrayList<>();
         Board tmpBoard = new Board();
         for (MoveBackup moveBackup : st.board.getBackup()) {
             Move curMove = moveBackup.getMove();
             EntryProcess entry = new EntryProcess();
-            entry.moveStr = Utils.PretifyMove(curMove.toString(), tmpBoard);
-            tmpBoard.doMove(curMove);
+            entry.moveStr = Utils.PretifyAndMove(curMove.toString(), tmpBoard);
             moveToPrint.add(entry);
         }
 
         EntryProcess entry = new EntryProcess();
         if (st.lastGameState == GameState.InProcess) {
-            entry.moveStr = Utils.PretifyMove(st.curMove, st.board);
+            if(st.curMove.length() >= 4){
+                entry.moveStr = "err";
+            }else
+                entry.moveStr = Utils.PretifyAndMove(st.curMove, st.board);
         }else{
             entry.endgame = true;
         }
@@ -621,7 +623,7 @@ public class MainActivity extends AppCompatActivity {
         return moveToPrint;
     }
 
-    private List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures) {
+    private List<DisplayMoveItem> generateDisplayMoveLst(boolean fShowFigures){
         List<DisplayMoveItem> lstMoves = new ArrayList<>();
 
         int moveCounter = 1;
@@ -718,6 +720,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void printAllMoves_int(boolean fShowFigures, boolean scroll) {
+
 
         lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
 

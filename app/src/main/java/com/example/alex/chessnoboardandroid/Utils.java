@@ -4,7 +4,9 @@ import android.content.Context;
 import android.util.Log;
 
 import com.github.bhlangonijr.chesslib.Board;
+import com.github.bhlangonijr.chesslib.Constants;
 import com.github.bhlangonijr.chesslib.Piece;
+import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 
@@ -68,19 +70,21 @@ public class Utils {
         }
     }
 
-    static  public String PretifyMove(String mv, Board brd){
+    static  public String PretifyAndMove(String mv, Board brd){
 
         StringBuilder curMv = new StringBuilder();
 
         if (mv.length() >= 2) {
 
             var cur = mv.substring(0,2);
-            curMv.append(getUnicodeFromPiece(brd.getPiece(parseSquare(cur))));
+            var sqFrom = parseSquare(cur);
+            curMv.append(getUnicodeFromPiece(brd.getPiece(sqFrom)));
             curMv.append(cur);
 
             if (mv.length() >= 4) {
                 cur = mv.substring(2,4);
-                curMv.append(getUnicodeFromPiece(brd.getPiece(parseSquare(cur))));
+                var sqTo = parseSquare(cur);
+                curMv.append(getUnicodeFromPiece(brd.getPiece(sqTo)));
                 curMv.append(cur);
 
                 if(mv.length() == 5){
@@ -88,6 +92,12 @@ public class Utils {
                 }else if(mv.length() > 5){
                     curMv.append("ERR");
                 }
+
+                brd.doMove(new Move(sqFrom, sqTo, mv.length() < 5 ? Piece.NONE : Side.WHITE.equals(brd.getSideToMove()) ?
+                        Constants.getPieceByNotation(
+                                mv.substring(4, 5).toUpperCase()) :
+                        Constants.getPieceByNotation(
+                                mv.substring(4, 5).toLowerCase())));
 
                 if(brd.isMated()) {
                     curMv.append("#");
