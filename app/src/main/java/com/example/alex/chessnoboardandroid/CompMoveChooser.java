@@ -35,22 +35,29 @@ public class CompMoveChooser {
 
         if (level == 0)
             // полный рандом
-            result = 100000;
+            result = 1000000;
         else if (level == 1)
-            // может пожертвовать ферзя
-            result = 900;
+            result = 1000; // десять пешеш
         else if (level == 2)
-            // может пожертвовать ладью
-            result = 500;
+            result = 900;  // ферзь
         else if (level == 3)
-            result = 400;
+            result = 800;
         else if (level == 4)
-            result = 300;
+            result = 700;
+        else if (level == 5)
+            result = 600;
+        else if (level == 6)
+            result = 500;   // ладья
             // дальше равномерно
         else {
-            double count = NewGameParams.getMaxLevel() - 5;
-            double step = 200.0 / count;
-            result = (int) ((NewGameParams.getMaxLevel() - level) * step);
+            int last_lvl = 6;
+            double rem_pwn = 500;
+
+            var cur = level-last_lvl;
+            var prc = cur / (double)(NewGameParams.getMaxLevel()-last_lvl);
+            prc = 1-prc;
+
+            result = (int) (prc * rem_pwn);
         }
         Log.d(TAG, String.format("delta score for level %d is %d", level, result));
         return result;

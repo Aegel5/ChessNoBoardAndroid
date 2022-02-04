@@ -41,22 +41,23 @@ public class UciMove {
     // score с учетом мата в n ходов
     public int getUniversalScore() {
 
-        var absMate = Math.abs(mateIn);
-
         if (mateIn == 0) {
             if (score == Integer.MIN_VALUE)
                 throw new RuntimeException("bad state");
             return score;
         }
 
-        else if (absMate == 1)
-            return mateIn * 900; // приравнивается к чистому ферзю. todo конем считать меньше (типо труднее заметить)
-        else if (absMate == 2)
-            return mateIn * 700;
-        else if(absMate == 3)
-            return mateIn * 600;
-        else
-            return mateIn * 500;
+        var absMate = Math.abs(mateIn);
+        var sgn = Integer.signum(mateIn);
+
+        if (absMate == 1)
+            return sgn * 900; // приравнивается к чистому ферзю. todo конем считать меньше (типо труднее заметить)
+        if (absMate == 2)
+            return sgn * 700;
+        if(absMate == 3)
+            return sgn * 600;
+
+        return sgn * 500; // равно выгрыш ладья
     }
 }
 
