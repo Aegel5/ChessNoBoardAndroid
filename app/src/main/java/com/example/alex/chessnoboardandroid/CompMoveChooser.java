@@ -27,7 +27,7 @@ public class CompMoveChooser {
     }
 
     /*
-    Вычислим score в пределах которого компьютер может ходить
+    Вычислим score в пределах которого компьютер может ходить (сколько пешек может залить за ход)
      */
     static private int strickDeltaScore(int level) {
 
@@ -37,21 +37,21 @@ public class CompMoveChooser {
             // полный рандом
             result = 1000000;
         else if (level == 1)
-            result = 1000; // десять пешеш
-        else if (level == 2)
-            result = 900;  // ферзь
-        else if (level == 3)
             result = 800;
-        else if (level == 4)
+        else if (level == 2)
             result = 700;
-        else if (level == 5)
+        else if (level == 3)
             result = 600;
+        else if (level == 4)
+            result = 550;
+        else if (level == 5)
+            result = 500;
         else if (level == 6)
-            result = 500;   // ладья
+            result = 450;
             // дальше равномерно
         else {
             int last_lvl = 6;
-            double rem_pwn = 500;
+            double rem_pwn = 450;
 
             var cur = level-last_lvl;
             var prc = cur / (double)(NewGameParams.getMaxLevel()-last_lvl);

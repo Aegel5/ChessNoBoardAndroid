@@ -78,27 +78,9 @@ public class MainActivity extends AppCompatActivity {
         buttonsLetters[7] = findViewById(R.id.l8);
     }
 
-
-    private String getUnicodeFromPiece(Piece piece) {
-        if (piece == Piece.WHITE_KING) return (Character.toString((char) 0x2654));
-        else if (piece == Piece.WHITE_QUEEN) return (Character.toString((char) 0x2655));
-        else if (piece == Piece.WHITE_ROOK) return (Character.toString((char) 0x2656));
-        else if (piece == Piece.WHITE_BISHOP) return (Character.toString((char) 0x2657));
-        else if (piece == Piece.WHITE_KNIGHT) return (Character.toString((char) 0x2658));
-        else if (piece == Piece.WHITE_PAWN) return (Character.toString((char) 0x2659));
-        else if (piece == Piece.BLACK_KING) return (Character.toString((char) 0x265A));
-        else if (piece == Piece.BLACK_QUEEN) return (Character.toString((char) 0x265B));
-        else if (piece == Piece.BLACK_ROOK) return (Character.toString((char) 0x265C));
-        else if (piece == Piece.BLACK_BISHOP) return (Character.toString((char) 0x265D));
-        else if (piece == Piece.BLACK_KNIGHT) return (Character.toString((char) 0x265E));
-        else if (piece == Piece.BLACK_PAWN) return (Character.toString((char) 0x265F));
-        return "";
-    }
-
     public void doMove(String move) {
         st.board.doMove(new Move(move, st.board.getSideToMove()));
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,40 +132,32 @@ public class MainActivity extends AppCompatActivity {
         String nice;
 
         public String NiceCont(Board brd){
+
             if(nice != null)
                 return nice;
+
             Board tmp = new Board();
             tmp.loadFromFen(brd.getFen());
             StringBuilder curMv = new StringBuilder();
             //curMv.append("• ");
             for(String s:cont){
-                Move mv = new Move(s, tmp.getSideToMove());
-                curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getFrom())));
-                curMv.append(s.substring(0, 2));
-                curMv.append(getUnicodeFromPiece(tmp.getPiece(mv.getTo())));
-                curMv.append(s.substring(2, 4));
 
-                if(s.length() > 4){
-                    curMv.append(s.charAt(4)); // promotion
-                }
+                curMv.append(Utils.PretifyMove(s, tmp));
+                curMv.append(' ');
 
                 try {
+                    Move mv = new Move(s, tmp.getSideToMove());
                     tmp.doMove(mv);
                 }catch (Exception ex){
-                    return "Err";
+                    curMv.append("Err");
+                    return curMv.toString();
                 }
-
-                if(tmp.isMated()) {
-                    curMv.append("#");
-                }else if(tmp.isKingAttacked()){
-                    curMv.append("+");
-                }
-
-                curMv.append(' ');
             }
+
             if(curMv.length()>0)
                 curMv.deleteCharAt(curMv.length()-1);
             nice = curMv.toString();
+
             return nice;
         }
     }
@@ -719,50 +693,29 @@ public class MainActivity extends AppCompatActivity {
 
     class EntryProcess {
         String moveStr = "";
-        Piece piece = Piece.NONE;
-        Piece pieceTo = Piece.NONE;
-        //String fen;
-        boolean isCheck = false;
-        boolean isMate = false;
         boolean endgame;
     }
 
     private List<EntryProcess> getHistory(){
+
         List<EntryProcess> moveToPrint = new ArrayList<>();
         Board tmpBoard = new Board();
         for (MoveBackup moveBackup : st.board.getBackup()) {
             Move curMove = moveBackup.getMove();
+            EntryProcess entry = new EntryProcess();
+            entry.moveStr = Utils.PretifyMove(curMove.toString(), tmpBoard);
             tmpBoard.doMove(curMove);
-            EntryProcess entry = new EntryProcess();
-            entry.moveStr = curMove.toString();
-            entry.piece = moveBackup.getMovingPiece();
-            entry.pieceTo = moveBackup.getCapturedPiece();
-            //entry.fen = tmpBoard.getFen();
-            if(tmpBoard.isMated()){
-                entry.isMate = true;
-            }else if (tmpBoard.isKingAttacked()) {
-                entry.isCheck = true;
-            }
-
             moveToPrint.add(entry);
         }
 
+        EntryProcess entry = new EntryProcess();
         if (st.lastGameState == GameState.InProcess) {
-            EntryProcess entry = new EntryProcess();
-            entry.moveStr = st.curMove;
-            entry.piece = Piece.NONE;
-            if (st.curMove.length() >= 2) {
-                entry.piece = st.board.getPiece(parseSquare(st.curMove.substring(0, 2)));
-            }
-            if (st.curMove.length() >= 4) {
-                entry.pieceTo = st.board.getPiece(parseSquare(st.curMove.substring(2, 4)));
-            }
-            moveToPrint.add(entry);
+            entry.moveStr = Utils.PretifyMove(st.curMove, st.board);
         }else{
-            EntryProcess entry = new EntryProcess();
             entry.endgame = true;
-            moveToPrint.add(entry);
         }
+        moveToPrint.add(entry);
+
         return moveToPrint;
     }
 
@@ -808,9 +761,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
 
-            String moveString = entry.moveStr;
-
-
             if (isWhite) {
                 curItem = new DisplayMoveItem();
                 lstMoves.add(curItem);
@@ -819,33 +769,14 @@ public class MainActivity extends AppCompatActivity {
                 moveCounter += 1;
             }
 
-            StringBuilder curMv = new StringBuilder();
-
-            if (fShowFigures) {
-                curMv.append(getUnicodeFromPiece(entry.piece));
-            }
-            if (moveString.length() > 0)
-                curMv.append(moveString.substring(0, Math.min(2, moveString.length())));
-            if (fShowFigures) {
-                curMv.append(getUnicodeFromPiece(entry.pieceTo));
-            }
-            if (moveString.length() > 2)
-                curMv.append(moveString.substring(2, moveString.length()));
-
-            if (entry.isCheck) {
-                curMv.append("+");
-            }else if(entry.isMate) {
-                curMv.append("#");
-            }
-
             boolean isSelected = i == sel;
 
             if (isWhite) {
-                curItem.whiteMove = curMv.toString();
+                curItem.whiteMove = entry.moveStr;
                 curItem.whiteSel = isSelected;
             }
             else {
-                curItem.blackMove = curMv.toString();
+                curItem.blackMove = entry.moveStr;
                 curItem.blackSel = isSelected;
             }
 
@@ -897,14 +828,6 @@ public class MainActivity extends AppCompatActivity {
             scr_end();
         }
 
-    }
-
-    private Square parseSquare(String sq) {
-        try {
-            return Square.fromValue(sq.toUpperCase());
-        } catch (Exception e) {
-            return Square.NONE;
-        }
     }
 
     private Move moveFromString(String moveString) {
