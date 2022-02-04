@@ -35,6 +35,8 @@ public class NewGameParams {
 
     private int compStrength = 3;
 
+    public int analItem = 4;
+
     private boolean addFiguresSign = true;
 
     public static int getMaxLevel() {

@@ -120,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
                 st = startNewGame(new NewGameParams());
             }
 
+            updateCompOnButtonText();
+
             h2.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -307,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
                                     first = cur;
                                 }
                                 item.cont.add(cur);
-                                if(item.cont.size() >= 4)
+                                if(item.cont.size() >= 7)
                                     break;
                                 continue;
                             }
@@ -376,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
                         if(myMove != null && cur.move.equals(myMove.toString())){
                             curAnal.add(String.format("(%d) %s %s", cur.number, cpres, cur.NiceCont(tmpBoard)));
                         }
-                        else if (curAnal.size() < 10 ) {
+                        else if (curAnal.size() < 7 ) {
                             curAnal.add(String.format("%s %s", cpres, cur.NiceCont(tmpBoard)));
                         }
                     }
@@ -592,8 +594,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateCompOnButtonText() {
         btnIsCompEnabled.setChecked(st.compEnabled);
-        btnIsCompEnabled.setTextOn(String.format("on(%d)", st.parm.getCompStrength()));
-        btnIsCompEnabled.setTextOff(String.format("off"));
+        var capt = String.format("C(%d)", st.parm.getCompStrength());
+        btnIsCompEnabled.setTextOn(capt);
+        btnIsCompEnabled.setTextOff(capt);
     }
 
     private GameData startNewGame(NewGameParams parms) {
