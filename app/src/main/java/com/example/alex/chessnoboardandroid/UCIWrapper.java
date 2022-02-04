@@ -94,25 +94,25 @@ public class UCIWrapper {
     /*
      Дождаться определенного сообщения
      */
-    public String wait(String output) throws InterruptedException, TimeoutException {
-        long timeout = 5000;
-        long start = System.currentTimeMillis();
-        int lastIndex = 0;
-        while (true) {
-            if (System.currentTimeMillis() - start > timeout) {
-                Log.d(TAG, "timeout for " + output);
-                throw new TimeoutException();
-            }
-            for (; lastIndex < currentOutput.size(); lastIndex++) {
-                String line = currentOutput.get(lastIndex);
-                if (line.indexOf(output) != -1) {
-                    //Log.d(TAG, "found string " + line);
-                    return line;
-                }
-            }
-            Thread.sleep(10);
-        }
-    }
+//    public String wait(String output) throws InterruptedException, TimeoutException {
+//        long timeout = 5000;
+//        long start = System.currentTimeMillis();
+//        int lastIndex = 0;
+//        while (true) {
+//            if (System.currentTimeMillis() - start > timeout) {
+//                Log.d(TAG, "timeout for " + output);
+//                throw new TimeoutException();
+//            }
+//            for (; lastIndex < currentOutput.size(); lastIndex++) {
+//                String line = currentOutput.get(lastIndex);
+//                if (line.indexOf(output) != -1) {
+//                    //Log.d(TAG, "found string " + line);
+//                    return line;
+//                }
+//            }
+//            Thread.sleep(10);
+//        }
+//    }
 
     public Map<String, UciMove> getCurrentMovesScore() {
         Map<String, UciMove> moves = new TreeMap<>();
