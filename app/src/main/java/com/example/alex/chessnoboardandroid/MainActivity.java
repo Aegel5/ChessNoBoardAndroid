@@ -530,7 +530,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 Log.d(TAG, item);
             }
-            String stockFileName = "stockfish_exe_arm7";
+            String stockFileName = "stockfish_exe_arm";
 
             if (found_x86)
                 stockFileName = "stockfish_exe_x86";
