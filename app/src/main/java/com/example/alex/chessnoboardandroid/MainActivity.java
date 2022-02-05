@@ -207,6 +207,11 @@ public class MainActivity extends AppCompatActivity {
                     List<String> ln = uci2.takeList();
                     for (int i = 0; i < ln.size(); i++) { // маленькая вероятно, но все же могут параллельно добавиться, но нам пофиг, но используем индекс.
                         String s = ln.get(i);
+                        if(s.startsWith("bestmove")){
+                            // clear from old analize
+                            cur_hash.clear();
+                            continue;
+                        }
                         analitem item = new analitem();
                         item.Parse(s, tmpBoard, true);
                         if(item.move != null){

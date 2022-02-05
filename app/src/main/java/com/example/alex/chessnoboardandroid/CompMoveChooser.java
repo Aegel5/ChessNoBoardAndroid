@@ -4,7 +4,9 @@ import android.util.Log;
 
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.MoveBackup;
+import com.github.bhlangonijr.chesslib.PieceType;
 import com.github.bhlangonijr.chesslib.Side;
+import com.github.bhlangonijr.chesslib.Square;
 import com.github.bhlangonijr.chesslib.move.Move;
 
 import java.text.MessageFormat;
@@ -104,6 +106,42 @@ public class CompMoveChooser {
         return sgn * 4.0;
     }
 
+    static  double CpByMaterial(Board brd) {
+
+        double total = 0;
+        for (Square square : Square.values()) {
+            var cur = brd.getPiece(square);
+            var type = cur.getPieceType();
+
+            if(type == PieceType.NONE)
+                continue;
+
+            double curcp = 0;
+
+            if (type == PieceType.PAWN) {
+                curcp = 1;
+            } else if (type == PieceType.BISHOP || type == PieceType.KNIGHT) {
+                curcp = 3;
+            } else if (type == PieceType.QUEEN ) {
+                curcp = 9;
+            }else if (type == PieceType.ROOK ) {
+                curcp = 5;
+            }
+
+            if(cur.getPieceSide() == Side.BLACK){
+                curcp = -curcp;
+            }
+
+            total += curcp;
+        }
+
+        if(brd.getSideToMove() == Side.BLACK){
+            total = -total;
+        }
+
+        return total;
+    }
+
     public static String DoMoveChoose(
             String lineBestMove,
             GameData st,
@@ -130,7 +168,7 @@ public class CompMoveChooser {
         Collections.sort(parsed, (u1, u2) -> u2.cp.compareTo(u1.cp));
 
         int cntGet = 0;
-        int sumGet = 0;
+        double sumGet = 0;
         for (var item : parsed) {
             if (item.mateIn == 0) {
                 cntGet++;
@@ -140,8 +178,10 @@ public class CompMoveChooser {
             }
         }
 
-        // оценка позиции без учета мата - среднее 8 лучших ходов
-        double etalon = cntGet == 0 ? 0 : ((double) sumGet / cntGet);
+        // оценка позиции без учета мата - среднее 8 лучших ходов + оценка по материалу
+        double etalon = cntGet == 0 ? 0 : sumGet / cntGet;
+        etalon += CpByMaterial(st.board);
+        etalon /= 2;
 
         // пропатчим все матовые ходы согласно эталону
         for (var item : parsed) {

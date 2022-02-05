@@ -48,7 +48,7 @@ public class UCIWrapper {
                         //Log.d(TAG, "UCI=" + line);
                     }
 
-                    currentOutput.add(line.toLowerCase());
+                    currentOutput.add(line);
                 }
             } catch (Exception e) {
                 Log.d(TAG, "Exception in threadReader: " + e.toString());
