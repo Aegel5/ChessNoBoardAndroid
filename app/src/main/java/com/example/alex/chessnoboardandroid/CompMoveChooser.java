@@ -37,36 +37,20 @@ public class CompMoveChooser {
      */
     static private double strickDeltaScore(int level) {
 
-        double result = 0;
+        if(level == 0)
+            return 1000000; // полный рандом
 
-        if (level == 0)
-            // полный рандом
-            result = 1000000;
-        else if (level == 1)
-            result = 8.0;
-        else if (level == 2)
-            result = 7.0;
-        else if (level == 3)
-            result = 6.0;
-        else if (level == 4)
-            result = 5.5;
-        else if (level == 5)
-            result = 5.0;
-        else if (level == 6)
-            result = 4.5;
-            // дальше равномерно
-        else {
-            int last_lvl = 6;
-            double rem_pwn = 450;
+        level = NewGameParams.getMaxLevel() - level;
 
-            var cur = level-last_lvl;
-            var prc = cur / (double)(NewGameParams.getMaxLevel()-last_lvl);
-            prc = 1-prc;
+        if(level == 0)
+            return 0; // только лучший
 
-            result = (prc * rem_pwn);
-        }
-        Log.d(TAG, MessageFormat.format("delta score for level {0} is {1}", level, result));
-        return result;
+        // exponent dependence
+        final double max = 20;
+        final double osn = Math.pow(max+1, 1.0/(NewGameParams.getMaxLevel()-1.0));
+        double res = Math.pow(osn, level);
+
+        return res-1;
     }
 
     /*
@@ -173,15 +157,15 @@ public class CompMoveChooser {
             if (item.mateIn == 0) {
                 cntGet++;
                 sumGet += item.cp;
-                if (cntGet >= 8)
+                if (cntGet >= 5)
                     break;
             }
         }
 
-        // оценка позиции без учета мата - среднее 8 лучших ходов + оценка по материалу
+        // оценка позиции без учета мата - среднее 5 лучших ходов + оценка по материалу
         double etalon = cntGet == 0 ? 0 : sumGet / cntGet;
-        etalon += CpByMaterial(st.board);
-        etalon /= 2;
+        etalon += 2*CpByMaterial(st.board);
+        etalon /= 3;
 
         // пропатчим все матовые ходы согласно эталону
         for (var item : parsed) {
@@ -255,17 +239,26 @@ public class CompMoveChooser {
         if (possibleMoves.isEmpty())
             throw new RuntimeException("possible moves empty");
 
-        String prevto = null;
-        if (prevComp != null) {
-            prevto = prevComp.getTo().value().toLowerCase();
+        // добавим веса, чтобы у лучших ходов было немного больше вероятности быть вытянутыми
+        var min = possibleMoves.get(possibleMoves.size()-1).cp;
+        var max = possibleMoves.get(0).cp;
+        var len = max - min;
+        if(len > 0) {
+            for (var m : possibleMoves) {
+                m.rnd += (m.cp - min) / len * 5;
+            }
         }
 
         // probability by distance from prev move. prev-to <-> cur-from
         // в таком случае фигура которой ходили в предыдущий раз (если такая есть в этой выборке, получит мак значение)
         // weight = 20 - dist
+        String prevto = null;
+        if (prevComp != null) {
+            prevto = prevComp.getTo().value().toLowerCase();
+        }
         double sumd = 0;
         for (var m : possibleMoves) {
-            m.rnd = 20;
+            m.rnd += 20;
             if (prevto != null) {
                 double dist = dist(prevto, m.move.substring(0, 2));
                 m.rnd -= dist;
@@ -294,7 +287,6 @@ public class CompMoveChooser {
         st.board.doMove(new Move(candMv.move, st.board.getSideToMove()));
         st.scoreCache.put(st.board.getFen(), candMv.cp);
         st.board.undoMove();
-
 
         return candMv.move;
     }
