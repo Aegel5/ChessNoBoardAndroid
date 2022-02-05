@@ -214,11 +214,14 @@ public class MainActivity extends AppCompatActivity {
                                 item.mateIn = -item.mateIn;
                                 item.cp = -item.cp;
                             }
-                            cur_hash.put(item.move, item);
+                            var old = cur_hash.get(item.move);
+                            if(old != null && old.cont.size() > item.cont.size()) {
+                                // skip not complete cont
+                            }else {
+                                cur_hash.put(item.move, item);
+                            }
                         }
                     }
-
-                    Log.d(TAG, "hash has");
 
                     List<analitem> sorted = new ArrayList<>();
 
@@ -229,12 +232,7 @@ public class MainActivity extends AppCompatActivity {
                     boolean neg = tmpBoard.getSideToMove() == Side.BLACK;
 
                     // todo use multipv instead of sort
-                    Collections.sort(sorted, new Comparator<analitem>() {
-                        @Override
-                        public int compare(analitem u1, analitem u2) {
-                            return neg ? u1.cp.compareTo(u2.cp) : u2.cp.compareTo(u1.cp);
-                        }
-                    });
+                    Collections.sort(sorted, (u1, u2) -> neg ? u1.cp.compareTo(u2.cp) : u2.cp.compareTo(u1.cp));
 
                     int curnumb = 1;
                     for (analitem entry: sorted) {
@@ -247,9 +245,8 @@ public class MainActivity extends AppCompatActivity {
                         if(cur.mateIn != 0){
                             cpres = "#"+ cur.mateIn;
                         }else{
-                            cpres = String.format("%.2f", cur.cp/100.0);
+                            cpres = String.format("%.2f", cur.cp);
                         }
-                        double dcp = ((double)cur.cp)/100.0;
                         if(myMove != null && cur.move.equals(myMove.toString())){
                             curAnal.add(String.format("(%d) %s %s", cur.number, cpres, cur.NiceCont(tmpBoard)));
                         }
@@ -257,7 +254,6 @@ public class MainActivity extends AppCompatActivity {
                             curAnal.add(String.format("%s %s", cpres, cur.NiceCont(tmpBoard)));
                         }
                     }
-                    //uci2.clearOutput(); // можем удалить те, которые еще не прочитали, но пофиг.
                     printAllMoves_noscr();
                 }
             }

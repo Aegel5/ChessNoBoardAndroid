@@ -1,49 +1,54 @@
 package com.example.alex.chessnoboardandroid;
 
 public class SimpleTokScanner {
-    private static final String TAG = MainApp.MainTag + SimpleTokScanner.class.getSimpleName();
-    
+
     private String text;
     private int curPos = 0;
-    private int numTokReturned = 0;
+    StringBuilder res = new StringBuilder();
 
     public SimpleTokScanner(String text) {
         this.text = text;
-        //Log.d(TAG, "create scanner=" + text);
-    }
-
-    public int getNumTokReturned() {
-        return numTokReturned;
     }
 
     public String getNext() {
 
-        //Log.d(TAG, "getnext");
+        res.setLength(0);
 
-        // найдем начало
-        int indexFrom = -1;
         for (; curPos < text.length(); curPos++) {
-            if (!Character.isWhitespace(text.charAt(curPos))) {
-                indexFrom = curPos;
-                break;
+            var cur = text.charAt(curPos);
+            if(Character.isWhitespace(cur)){
+                if(res.length() > 0)
+                    return res.toString();
+            }else{
+                res.append(cur);
             }
         }
 
-        if (indexFrom == -1)
-            return null;
+        if(res.length() > 0)
+            return res.toString(); // last
 
-        // найдем конец (должен быть в любом случае, так как есть начало)
+        return null; // the end
+    }
+
+    public void skip(String tok){
+
+        int i = 0;
         for (; curPos < text.length(); curPos++) {
-            if (Character.isWhitespace(text.charAt(curPos))) {
-                break;
+            var cur = text.charAt(curPos);
+            if(Character.isWhitespace(cur)){
+                if(i == tok.length())
+                    return;
+                else
+                    i = 0;
+            }else{
+                if(i < tok.length()){
+                    if(tok.charAt(i) == cur){
+                        i++;
+                    }else{
+                        i = Integer.MAX_VALUE;
+                    }
+                }
             }
         }
-        int indexTo = curPos;
-
-        numTokReturned += 1;
-        String result = text.substring(indexFrom, indexTo);
-        //Log.d(TAG, String.format("cur token=/%s/", result));
-        return result;
-
     }
 }

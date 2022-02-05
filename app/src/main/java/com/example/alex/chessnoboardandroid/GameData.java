@@ -14,7 +14,7 @@ import java.util.TreeMap;
 class GameData {
     public NewGameParams parm = new NewGameParams();
     public String curMove = "";
-    public Map<String, Integer> scoreCache = new TreeMap<>();
+    public Map<String, Double> scoreCache = new TreeMap<>();
     public GameState lastGameState;
     public transient Board board = null;
     public boolean compEnabled = false;

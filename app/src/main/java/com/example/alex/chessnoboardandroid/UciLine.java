@@ -12,10 +12,11 @@ import java.util.List;
 
 class analitem{
     public String move;
-    public Integer cp;
+    public Double cp;
     public List<String> cont = new ArrayList<>();
     public  int number;
     public  int mateIn;
+    public double rnd;
     String nice;
 
     public String NiceCont(Board brd){
@@ -46,65 +47,64 @@ class analitem{
         return nice;
     }
 
-    public void Parse(String s, Board tmpBoard, boolean getCont){
+    public void Parse(String s, Board tmpBoard, boolean getCont) {
+
         SimpleTokScanner a = new SimpleTokScanner(s);
-        String pp = a.getNext();
-        if(!pp.equals("info"))
+
+        if (!"info".equals(a.getNext()))
             return;
-        boolean nextpv = false;
-        while(true){
-            String cur = a.getNext();
-            if(cur == null)
+
+        a.skip("score");
+        String cur = a.getNext();
+        if (cur == null)
+            return;
+        else if (cur.equals("mate")) {
+            cur = a.getNext();
+            if (cur == null)
+                return;
+            mateIn = Integer.parseInt(cur);
+            cp = 10000000.0 * Integer.signum(mateIn) - mateIn;
+        } else if (cur.equals("cp")) {
+            cur = a.getNext();
+            if (cur == null)
+                return;
+            cp = Integer.parseInt(cur)/100.0;
+        }
+
+        a.skip("pv");
+
+        while (true) {
+
+            cur = a.getNext();
+            if (cur == null)
                 break;
-            if(nextpv){
-                if(move == null) {
-                    //if(!tmpBoard.isMoveLegal(cur, false))
-                    //  break;
-                    if(tmpBoard != null) {
-                        Move mv = new Move(cur, tmpBoard.getSideToMove());
-                        Piece pc = tmpBoard.getPiece(mv.getFrom());
 
-                        if (pc == Piece.NONE)
-                            break;
-                        if (tmpBoard.getSideToMove() != pc.getPieceSide()) {
-                            break;
-                        }
+            if (move == null) {
 
-                        try {
-                            if (!tmpBoard.isMoveLegal(mv, false))
-                                break;
-                        } catch (Exception ex) {
-                            break;
-                        }
-                    }
-                    move = cur;
-                    if(!getCont)
+                if (tmpBoard != null) {
+                    Move mv = new Move(cur, tmpBoard.getSideToMove());
+                    Piece pc = tmpBoard.getPiece(mv.getFrom());
+
+                    if (pc == Piece.NONE)
                         break;
+                    if (tmpBoard.getSideToMove() != pc.getPieceSide()) {
+                        break;
+                    }
+
+                    try {
+                        if (!tmpBoard.isMoveLegal(mv, false))
+                            break;
+                    } catch (Exception ex) {
+                        break;
+                    }
                 }
-                cont.add(cur);
-                if(cont.size() >= 8)
+                move = cur;
+                if (!getCont)
                     break;
-                continue;
             }
-            if(cur.equals("mate")){
-                cur = a.getNext();
-                if (cur == null)
-                    break;
-                mateIn = Integer.parseInt(cur);
-                cp = 10000000 * Integer.signum(mateIn) - mateIn;
-                continue;
-            }
-            if(cur.equals("cp")) {
-                cur = a.getNext();
-                if (cur == null)
-                    break;
-                cp = Integer.parseInt(cur);
-                continue;
-            }
-            if(cur.equals("pv")){
-                nextpv = true;
-                continue;
-            }
+            cont.add(cur);
+            if (cont.size() >= 8)
+                break;
         }
     }
 
