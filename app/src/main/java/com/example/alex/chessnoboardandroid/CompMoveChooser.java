@@ -144,10 +144,14 @@ public class CompMoveChooser {
         }
 
         var lines = uci.curLines();
-        if (lines.isEmpty())
+        var parsed = analitem.Parse(lines);
+
+        if (parsed.isEmpty())
             throw new RuntimeException("moves is empty, but best move exists");
 
-        var parsed = analitem.Parse(lines);
+        if(st.parm.getCompStrength() == 0){
+            return parsed.get(MainApp.rndFromRange(0, parsed.size() - 1)).move; // todo use generateLegalMoves instead
+        }
 
         Collections.sort(parsed, (u1, u2) -> u2.cp.compareTo(u1.cp));
 
