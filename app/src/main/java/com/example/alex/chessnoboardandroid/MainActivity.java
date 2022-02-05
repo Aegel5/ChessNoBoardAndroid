@@ -609,16 +609,13 @@ public class MainActivity extends AppCompatActivity {
         for (MoveBackup moveBackup : st.board.getBackup()) {
             Move curMove = moveBackup.getMove();
             EntryProcess entry = new EntryProcess();
-            entry.moveStr = Utils.PretifyAndMove(curMove.toString(), tmpBoard);
+            entry.moveStr = Utils.PretifyAndMove(curMove.toString(), tmpBoard, true);
             moveToPrint.add(entry);
         }
 
         EntryProcess entry = new EntryProcess();
         if (st.lastGameState == GameState.InProcess) {
-            if(st.curMove.length() >= 4){
-                entry.moveStr = "err";
-            }else
-                entry.moveStr = Utils.PretifyAndMove(st.curMove, st.board);
+            entry.moveStr = Utils.PretifyAndMove(st.curMove, st.board, false);
         }else{
             entry.endgame = true;
         }

@@ -249,7 +249,7 @@ public class CompMoveChooser {
         var len = max - min;
         if(len > 0) {
             for (var m : possibleMoves) {
-                m.rnd += (m.cp - min) / len * 10;
+                m.rnd += (m.cp - min) / len * 8;
             }
         }
 
@@ -258,7 +258,7 @@ public class CompMoveChooser {
             for (var m : possibleMoves) {
                 var sq = Square.fromValue(m.move.substring(0,2).toUpperCase());
                 if(st.board.getPiece(sq).getPieceType() == st.parm.compFavoriteFigure){
-                    m.rnd += 15;
+                    m.rnd += 5 + st.parm.favoritePrc * 15;
                 }
             }
         }

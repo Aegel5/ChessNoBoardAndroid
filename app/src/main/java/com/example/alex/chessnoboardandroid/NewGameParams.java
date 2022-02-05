@@ -40,6 +40,7 @@ public class NewGameParams {
     private int compStrength = 3;
 
     public PieceType compFavoriteFigure = PieceType.NONE;
+    public double favoritePrc = 0;
 
     //public int analItem = 4;
 
@@ -52,6 +53,8 @@ public class NewGameParams {
     public  void ChooseFavorite(){
         while(compFavoriteFigure == PieceType.NONE)
             compFavoriteFigure = PieceType.values()[MainApp.rndFromRange(0, PieceType.values().length-1)];
+
+        favoritePrc = MainApp.rand().nextDouble();
     }
 
     public boolean isMaxStrength() {

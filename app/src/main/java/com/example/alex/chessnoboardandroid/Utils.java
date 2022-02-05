@@ -70,13 +70,13 @@ public class Utils {
         }
     }
 
-    static  public String PretifyAndMove(String mv, Board brd) {
+    static  public String PretifyAndMove(String mv, Board brd, boolean complete) {
         StringBuilder curMv = new StringBuilder();
-        PretifyAndMove(curMv, mv, brd);
+        PretifyAndMove(curMv, mv, brd, complete);
         return curMv.toString();
     }
 
-    static  public void PretifyAndMove(StringBuilder curMv, String mv, Board brd){
+    static  public void PretifyAndMove(StringBuilder curMv, String mv, Board brd, boolean complete){
 
         if (mv.length() >= 2) {
 
@@ -91,22 +91,26 @@ public class Utils {
                 curMv.append(getUnicodeFromPiece(brd.getPiece(sqTo)));
                 curMv.append(cur);
 
-                if(mv.length() == 5){
-                    curMv.append(mv.charAt(4));
-                }else if(mv.length() > 5){
-                    curMv.append("ERR");
-                }
+                if(complete) {
 
-                brd.doMove(new Move(sqFrom, sqTo, mv.length() < 5 ? Piece.NONE : Side.WHITE.equals(brd.getSideToMove()) ?
-                        Constants.getPieceByNotation(
-                                mv.substring(4, 5).toUpperCase()) :
-                        Constants.getPieceByNotation(
-                                mv.substring(4, 5).toLowerCase())));
+                    if (mv.length() == 5) {
+                        curMv.append(mv.charAt(4));
+                    } else if (mv.length() > 5) {
+                        curMv.append("ERR");
+                    }
 
-                if(brd.isMated()) {
-                    curMv.append("#");
-                }else if(brd.isKingAttacked()){
-                    curMv.append("+");
+                    brd.doMove(new Move(sqFrom, sqTo, mv.length() < 5 ? Piece.NONE : Side.WHITE.equals(brd.getSideToMove()) ?
+                            Constants.getPieceByNotation(
+                                    mv.substring(4, 5).toUpperCase()) :
+                            Constants.getPieceByNotation(
+                                    mv.substring(4, 5).toLowerCase())));
+
+                    if (brd.isMated()) {
+                        curMv.append("#");
+                    } else if (brd.isKingAttacked()) {
+                        curMv.append("+");
+                    }
+
                 }
 
             }else if(mv.length() == 3){

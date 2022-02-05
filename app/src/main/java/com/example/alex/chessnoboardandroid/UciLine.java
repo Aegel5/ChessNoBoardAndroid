@@ -32,7 +32,7 @@ class analitem{
 
 
             try {
-                Utils.PretifyAndMove(curMv, s, tmp);
+                Utils.PretifyAndMove(curMv, s, tmp, true);
                 curMv.append(' ');
             }catch (Exception ex){
                 curMv.append("Err");
