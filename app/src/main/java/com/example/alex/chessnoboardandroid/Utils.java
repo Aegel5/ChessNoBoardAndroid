@@ -70,9 +70,13 @@ public class Utils {
         }
     }
 
-    static  public String PretifyAndMove(String mv, Board brd){
-
+    static  public String PretifyAndMove(String mv, Board brd) {
         StringBuilder curMv = new StringBuilder();
+        PretifyAndMove(curMv, mv, brd);
+        return curMv.toString();
+    }
+
+    static  public void PretifyAndMove(StringBuilder curMv, String mv, Board brd){
 
         if (mv.length() >= 2) {
 
@@ -112,7 +116,5 @@ public class Utils {
         }else if(mv.length() == 1){
             curMv.append(mv.charAt(0));
         }
-
-        return curMv.toString();
     }
 }
