@@ -46,7 +46,7 @@ public class CompMoveChooser {
             return 0; // только лучший
 
         // exponent dependence
-        final double max = 20;
+        final double max = 16;
         final double osn = Math.pow(max+1, 1.0/(NewGameParams.getMaxLevel()-1.0));
         double res = Math.pow(osn, level);
 
