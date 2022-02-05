@@ -84,8 +84,8 @@ public class CompMoveChooser {
     }
 
     static double  dist(String s1, String s2){
-        double x = (s1.charAt(0) - 'a') - (s2.charAt(0) - 'a');
-        double y = (s1.charAt(1) - '1') - (s2.charAt(1) - '1');
+        double x = s1.charAt(0)  - s2.charAt(0);
+        double y = s1.charAt(1) - s2.charAt(1);
         return Math.sqrt(x*x+y*y);
     }
 
@@ -135,12 +135,12 @@ public class CompMoveChooser {
             if (item.mateIn == 0) {
                 cntGet++;
                 sumGet += item.cp;
-                if (cntGet >= 10)
+                if (cntGet >= 8)
                     break;
             }
         }
 
-        // оценка позиции без учета мата - среднее 10 лучших ходов
+        // оценка позиции без учета мата - среднее 8 лучших ходов
         double etalon = cntGet == 0 ? 0 : ((double) sumGet / cntGet);
 
         // пропатчим все матовые ходы согласно эталону
