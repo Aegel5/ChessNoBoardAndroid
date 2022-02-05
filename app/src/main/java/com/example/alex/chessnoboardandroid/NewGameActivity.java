@@ -19,7 +19,7 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
 
     private TextView strengthLabel;
     private String origLabel;
-    private Spinner spinnerAllowBoard;
+    //private Spinner spinnerAllowBoard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +35,8 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
         String jsonObj = getIntent().getStringExtra("prevParm");
         NewGameParams prevParm = (new Gson()).fromJson(jsonObj, NewGameParams.class);
 
-        spinnerAllowBoard = findViewById(R.id.spinnerAllowBoard);
-        spinnerAllowBoard.setSelection(prevParm.getAllowViewBoardMode().getIndex());
+        //spinnerAllowBoard = findViewById(R.id.spinnerAllowBoard);
+        //spinnerAllowBoard.setSelection(prevParm.getAllowViewBoardMode().getIndex());
 
         Log.d(TAG, String.format("onCreate NewGameActivity. strengthLabel=%s", Boolean.toString(strengthLabel != null)));
 
@@ -48,8 +48,8 @@ public class NewGameActivity extends AppCompatActivity implements SeekBar.OnSeek
 
         NewGameParams newGameParm = new NewGameParams();
 
-        int pos = spinnerAllowBoard.getSelectedItemPosition();
-        newGameParm.setAllowViewBoardMode(AllowViewBoardMode.fromId(pos));
+        //int pos = spinnerAllowBoard.getSelectedItemPosition();
+        //newGameParm.setAllowViewBoardMode(AllowViewBoardMode.fromId(pos));
 
         newGameParm.setCompStrength(((SeekBar)findViewById(R.id.seekBar)).getProgress());
         Intent returnIntent = new Intent();

@@ -1,5 +1,9 @@
 package com.example.alex.chessnoboardandroid;
 
+import android.util.Log;
+
+import com.github.bhlangonijr.chesslib.PieceType;
+
 enum AllowViewBoardMode {
     None(0),
     AllowViewTextBoard(1),
@@ -31,16 +35,23 @@ public class NewGameParams {
     private static final int maxLevel = 20;
 
     // Можно ли подсматривать на доску
-    private AllowViewBoardMode allowViewBoardMode = AllowViewBoardMode.None;
+    //private AllowViewBoardMode allowViewBoardMode = AllowViewBoardMode.None;
 
     private int compStrength = 3;
 
-    public int analItem = 4;
+    public PieceType compFavoriteFigure = PieceType.NONE;
 
-    private boolean addFiguresSign = true;
+    //public int analItem = 4;
+
+    //private boolean addFiguresSign = true;
 
     public static int getMaxLevel() {
         return maxLevel;
+    }
+
+    public  void ChooseFavorite(){
+        while(compFavoriteFigure == PieceType.NONE)
+            compFavoriteFigure = PieceType.values()[MainApp.rndFromRange(0, PieceType.values().length-1)];
     }
 
     public boolean isMaxStrength() {
@@ -51,23 +62,23 @@ public class NewGameParams {
         return compStrength;
     }
 
-    public AllowViewBoardMode getAllowViewBoardMode() {
-        return allowViewBoardMode;
-    }
-
-    public void setAllowViewBoardMode(AllowViewBoardMode allowViewBoardMode) {
-        this.allowViewBoardMode = allowViewBoardMode;
-    }
+//    public AllowViewBoardMode getAllowViewBoardMode() {
+//        return allowViewBoardMode;
+//    }
+//
+//    public void setAllowViewBoardMode(AllowViewBoardMode allowViewBoardMode) {
+//        this.allowViewBoardMode = allowViewBoardMode;
+//    }
 
     public void setCompStrength(int compStrength) {
         this.compStrength = compStrength;
     }
 
-    public boolean isAddFiguresSign() {
-        return addFiguresSign;
-    }
+    //public boolean isAddFiguresSign() {
+    //    return addFiguresSign;
+    //}
 
-    public void setAddFiguresSign(boolean addFiguresSign) {
-        this.addFiguresSign = addFiguresSign;
-    }
+//    public void setAddFiguresSign(boolean addFiguresSign) {
+//        this.addFiguresSign = addFiguresSign;
+//    }
 }

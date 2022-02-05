@@ -481,8 +481,11 @@ public class MainActivity extends AppCompatActivity {
             st = new GameData();
 
             int level = parms.getCompStrength();
-            if (level < 0 || level > 20)
+            if (level < 0 || level > NewGameParams.getMaxLevel())
                 throw new RuntimeException("wrong level " + level);
+
+            parms.ChooseFavorite();
+
             st.parm = parms;
 
 
@@ -587,11 +590,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void printAllMoves() {
-        printAllMoves_int(st.parm.isAddFiguresSign(), true);
+        printAllMoves_int(true);
     }
 
     private void printAllMoves_noscr() {
-        printAllMoves_int(st.parm.isAddFiguresSign(), false);
+        printAllMoves_int(false);
     }
 
     class EntryProcess {
@@ -720,10 +723,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void printAllMoves_int(boolean fShowFigures, boolean scroll) {
+    private void printAllMoves_int(boolean scroll) {
 
 
-        lstMoveItemsDisplay = generateDisplayMoveLst(fShowFigures);
+        lstMoveItemsDisplay = generateDisplayMoveLst(true);
 
 
 
