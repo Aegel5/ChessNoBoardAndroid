@@ -10,6 +10,8 @@ import com.github.bhlangonijr.chesslib.move.MoveGenerator;
 import com.github.bhlangonijr.chesslib.move.MoveGeneratorException;
 import com.github.bhlangonijr.chesslib.move.MoveList;
 
+import java.util.List;
+
 /*
 Дополнительный функционал поверх com.github.bhlangonijr.chesslib
 */
@@ -42,13 +44,32 @@ public class ChessLibWrapper {
         return GameState.InProcess;
     }
 
+//    public  static Square SqFromChars(char a, char b){
+//        if(a <= 'h')
+//            a -= 'a';
+//        else
+//            a -= 'A';
+//
+//        b -= '1';
+//
+//        int val = a*8+b;
+//
+//        return (Square)val;
+//
+//    }
+//
+//    public  static Move MvFromStringQuick(String mv){
+//
+//
+//    }
+
     public static MoveLegalResult isMoveLegal(Move move, Board board, boolean checkNeedPromotion) {
         if (move == null)
             return MoveLegalResult.Bad;
         if (move.getFrom() == Square.NONE || move.getTo() == Square.NONE)
             return MoveLegalResult.Bad;
 
-        MoveList moves;
+        List<Move> moves;
         try {
             moves = MoveGenerator.generateLegalMoves(board);
         } catch (MoveGeneratorException e) {

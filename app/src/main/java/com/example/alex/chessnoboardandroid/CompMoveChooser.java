@@ -32,6 +32,19 @@ public class CompMoveChooser {
         return floatDeltaScore(level);
     }
 
+    // 0 -> 0
+    // x_max -> y_max
+    static double exp_map(double xmax, double ymax, double x){
+        double res = Math.pow(ymax+1, x/xmax);
+        return res-1;
+    }
+    // koeff < 1 - кривая стремится к прямой
+    // koeff > 1 - кривая стремится к углу.
+    static double exp_map(double xmax, double ymax, double koeff, double x){
+        var res = exp_map(xmax, ymax*koeff, x);
+        return res/koeff;
+    }
+
     /*
     Вычислим score в пределах которого компьютер может ходить (сколько пешек может залить за ход)
      */
@@ -42,15 +55,9 @@ public class CompMoveChooser {
 
         level = NewGameParams.getMaxLevel() - level;
 
-        if(level == 0)
-            return 0; // только лучший
-
-        // exponent dependence
-        final double max = 16;
-        final double osn = Math.pow(max+1, 1.0/(NewGameParams.getMaxLevel()-1.0));
-        double res = Math.pow(osn, level);
-
-        return res-1;
+        // exponent dependence. 1-level=14, max-level=0.
+        var res = exp_map(NewGameParams.getMaxLevel() - 1, 14, 1.1, level);
+        return res;
     }
 
     /*
@@ -221,9 +228,7 @@ public class CompMoveChooser {
         if (minPossibleScore > previusScore) {
             // Пользователь зевнул, на низких уровнях не будем принимать его зевок
             double total = minPossibleScore - previusScore;
-            double step = total / NewGameParams.getMaxLevel();
-            double addFor = step * st.parm.getCompStrength();
-            minPossibleScore = previusScore + Math.round(addFor);
+            minPossibleScore = previusScore + exp_map(NewGameParams.getMaxLevel(), total, st.parm.getCompStrength());
             Log.d(TAG, MessageFormat.format("уменьшаем minPossibleScore {0} -> {1}", origMinPossibleScore, minPossibleScore));
 
         }
@@ -284,14 +289,18 @@ public class CompMoveChooser {
         r *= sumd;
 
         double cursum = 0;
+        int numb = 0;
         analitem candMv = null;
         for (var m : possibleMoves) {
             cursum += m.rnd;
+            numb++;
             if (r <= cursum) {
                 candMv = m;
                 break;
             }
         }
+
+        Log.d(TAG, MessageFormat.format("choose move {0} from {1}", numb, possibleMoves.size()));
 
         if (candMv == null) {
             candMv = possibleMoves.get(MainApp.rndFromRange(0, possibleMoves.size() - 1)); // fallback

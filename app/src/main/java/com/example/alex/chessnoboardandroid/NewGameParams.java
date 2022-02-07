@@ -32,7 +32,7 @@ enum AllowViewBoardMode {
 
 public class NewGameParams {
 
-    private static final int maxLevel = 20;
+    private static final int maxLevel = 22;
 
     // Можно ли подсматривать на доску
     //private AllowViewBoardMode allowViewBoardMode = AllowViewBoardMode.None;
